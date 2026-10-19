@@ -44,7 +44,7 @@
                 <span class="text-2xl">📅</span>
                 <div>
                     <h1 class="font-bold text-lg leading-none">Projecten Dashboard</h1>
-                    <span class="text-xs text-slate-400">Maandoverzicht & Planning</span>
+                    <span class="text-xs text-slate-400">Cloud Synchronisatie Actief</span>
                 </div>
             </div>
             
@@ -84,7 +84,7 @@
 
             <!-- Scrollable list of projects sorted by priority -->
             <div id="priorityList" class="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
-                <!-- Dynamically populated -->
+                <div class="text-center py-6 text-slate-400 text-xs italic">Verbinding maken met cloud...</div>
             </div>
         </aside>
 
@@ -122,7 +122,7 @@
                         <span id="materialsCountTag" class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">0 items</span>
                     </div>
                     <div id="materialsPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">
-                        Laden van materialen...
+                        Laden...
                     </div>
                 </div>
 
@@ -136,7 +136,7 @@
                         <span id="todoCountTag" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">0 taken</span>
                     </div>
                     <div id="todoPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">
-                        Laden van taken...
+                        Laden...
                     </div>
                 </div>
 
@@ -334,48 +334,36 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT APP LOGIC -->
-    <script>
-        // AUTOMATISCHE CACHE KILLER FORCEREN VOOR TELEFOON
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-            });
-        }
-        if ('caches' in window) {
-            caches.keys().then(function(names) {
-                for (let name of names) caches.delete(name);
-            });
-        }
+    <!-- FIREBASE & APP LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABGGFzDqh76OwDWzkbqX7tbY1ndkkZ8Ng",
+            authDomain: "houtwerk-schiermonnikoog.firebaseapp.com",
+            projectId: "houtwerk-schiermonnikoog",
+            storageBucket: "houtwerk-schiermonnikoog.firebasestorage.app",
+            messagingSenderId: "336400406245",
+            appId: "1:336400406245:web:0fabdddc1ef0449fd7660c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
         let currentDate = new Date();
-        let projects = JSON.parse(localStorage.getItem('pwa_projects')) || [
-            {
-                id: '1',
-                name: 'Badkamer Verbouwen',
-                startDate: new Date().toISOString().split('T')[0],
-                endDate: new Date(Date.now() + 5*24*60*60*1000).toISOString().split('T')[0],
-                color: '#0284c7',
-                priority: 'Hoog',
-                status: 'In uitvoering',
-                statusUpdatedAt: new Date().toISOString(),
-                materials: [
-                    { name: 'Vloertegels 15m2', bought: false },
-                    { name: 'Sanitair kit', bought: true }
-                ],
-                todos: [
-                    { name: 'Tegelzetter bellen', done: false },
-                    { name: 'Oude douche slopen', done: true }
-                ],
-                notes: 'Tegelzetter komt op afspraak.'
-            }
-        ];
-
+        window.projects = [];
         let materialFilter = 'all';
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // Luister live naar wijzigingen in Firebase
+        const projectsRef = ref(db, 'projects');
+        onValue(projectsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                window.projects = Object.values(data);
+            } else {
+                window.projects = [];
+            }
             renderCalendar();
             renderPrioritySidebar();
             renderTodoPreview();
@@ -383,33 +371,46 @@
             checkNotifications();
         });
 
-        function saveProjectsState() {
-            localStorage.setItem('pwa_projects', JSON.stringify(projects));
-            renderCalendar();
-            renderPrioritySidebar();
-            renderMaterialsPreview();
-            renderTodoPreview();
-            checkNotifications();
+        window.saveProjectsState = function() {
+            const projectsObj = {};
+            window.projects.forEach(p => {
+                projectsObj[p.id] = p;
+            });
+            set(ref(db, 'projects'), projectsObj);
         }
+
+        window.renderCalendar = renderCalendar;
+        window.renderPrioritySidebar = renderPrioritySidebar;
+        window.renderTodoPreview = renderTodoPreview;
+        window.renderMaterialsPreview = renderMaterialsPreview;
+        window.checkNotifications = checkNotifications;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+        });
+    </script>
+
+    <script>
+        let currentModalProjectId = null;
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
         }
+        window.toggleSidebar = toggleSidebar;
 
-        // --- RENDER SIDEBAR PRIORITEITEN ---
         function renderPrioritySidebar() {
             const container = document.getElementById('priorityList');
             container.innerHTML = '';
 
-            if (projects.length === 0) {
+            if (!window.projects || window.projects.length === 0) {
                 container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs italic">Nog geen projecten aanwezig.</div>`;
                 return;
             }
 
             const priorityWeight = { 'Hoog': 1, 'Middel': 2, 'Laag': 3 };
 
-            const sortedProjects = [...projects].sort((a, b) => {
+            const sortedProjects = [...window.projects].sort((a, b) => {
                 const weightA = priorityWeight[a.priority] || 2;
                 const weightB = priorityWeight[b.priority] || 2;
                 return weightA - weightB;
@@ -423,7 +424,6 @@
 
                 const openTodos = p.todos ? p.todos.filter(t => !t.done) : [];
                 const nextTodo = openTodos.length > 0 ? openTodos[0].name : null;
-
                 const priorityIcon = p.priority === 'Hoog' ? '🔴' : p.priority === 'Middel' ? '🟡' : '🟢';
 
                 card.innerHTML = `
@@ -449,11 +449,12 @@
             });
         }
 
-        // --- CALENDAR ENGINE ---
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
             grid.innerHTML = '';
 
+            const currentDate = window.currentDate || new Date();
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
 
@@ -512,7 +513,7 @@
                 const overlayContainer = document.createElement('div');
                 overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
 
-                const weekProjects = projects.filter(p => {
+                const weekProjects = (window.projects || []).filter(p => {
                     const pStart = new Date(p.startDate);
                     const pEnd = new Date(p.endDate);
                     pStart.setHours(0,0,0,0);
@@ -565,11 +566,11 @@
         }
 
         function changeMonth(delta) {
-            currentDate.setMonth(currentDate.getMonth() + delta);
+            window.currentDate.setMonth(window.currentDate.getMonth() + delta);
             renderCalendar();
         }
+        window.changeMonth = changeMonth;
 
-        // --- PROJECT FORM INPUT DYNAMICS ---
         function addMaterialRow(name = '', bought = false) {
             const container = document.getElementById('materialsInputsContainer');
             const div = document.createElement('div');
@@ -581,6 +582,7 @@
             `;
             container.appendChild(div);
         }
+        window.addMaterialRow = addMaterialRow;
 
         function addTodoRow(name = '', done = false) {
             const container = document.getElementById('todosInputsContainer');
@@ -593,8 +595,8 @@
             `;
             container.appendChild(div);
         }
+        window.addTodoRow = addTodoRow;
 
-        // --- PROJECT MODAL & CRUD ---
         function openProjectModal(id = null) {
             const form = document.getElementById('projectForm');
             form.reset();
@@ -602,7 +604,8 @@
             document.getElementById('todosInputsContainer').innerHTML = '';
 
             if (id) {
-                const p = projects.find(x => x.id === id);
+                const p = window.projects.find(x => x.id === id);
+                if (!p) return;
                 document.getElementById('projectId').value = p.id;
                 document.getElementById('projectName').value = p.name;
                 document.getElementById('startDate').value = p.startDate;
@@ -628,10 +631,12 @@
 
             document.getElementById('projectModal').classList.remove('hidden');
         }
+        window.openProjectModal = openProjectModal;
 
         function closeProjectModal() {
             document.getElementById('projectModal').classList.add('hidden');
         }
+        window.closeProjectModal = closeProjectModal;
 
         function saveProject(e) {
             e.preventDefault();
@@ -644,7 +649,6 @@
             const status = document.getElementById('projectStatus').value;
             const notes = document.getElementById('projectNotes').value;
 
-            // Collect Materials
             const materials = [];
             document.querySelectorAll('.material-row').forEach(row => {
                 const mName = row.querySelector('.mat-name').value.trim();
@@ -652,7 +656,6 @@
                 if (mName) materials.push({ name: mName, bought: mBought });
             });
 
-            // Collect Todos
             const todos = [];
             document.querySelectorAll('.todo-row').forEach(row => {
                 const tName = row.querySelector('.todo-name').value.trim();
@@ -661,43 +664,46 @@
             });
 
             if (id) {
-                const index = projects.findIndex(p => p.id === id);
+                const index = window.projects.findIndex(p => p.id === id);
                 if (index !== -1) {
-                    const statusChanged = projects[index].status !== status;
-                    projects[index] = {
-                        ...projects[index],
+                    const statusChanged = window.projects[index].status !== status;
+                    window.projects[index] = {
+                        ...window.projects[index],
                         name, startDate, endDate, color, priority, status,
-                        statusUpdatedAt: statusChanged ? new Date().toISOString() : projects[index].statusUpdatedAt,
+                        statusUpdatedAt: statusChanged ? new Date().toISOString() : window.projects[index].statusUpdatedAt,
                         materials, todos, notes
                     };
                 }
             } else {
-                projects.push({
-                    id: Date.now().toString(),
+                window.projects.push({
+                    id: 'p_' + Date.now(),
                     name, startDate, endDate, color, priority, status,
                     statusUpdatedAt: new Date().toISOString(),
                     materials, todos, notes
                 });
             }
 
-            saveProjectsState();
+            window.saveProjectsState();
             closeProjectModal();
         }
+        window.saveProject = saveProject;
 
         function deleteProject() {
             const id = document.getElementById('projectId').value;
             if (id && confirm('Weet je zeker dat je dit project wilt verwijderen?')) {
-                projects = projects.filter(p => p.id !== id);
-                saveProjectsState();
+                window.projects = window.projects.filter(p => p.id !== id);
+                window.saveProjectsState();
                 closeProjectModal();
                 closeDetailModal();
             }
         }
+        window.deleteProject = deleteProject;
 
-        // --- DETAIL MODAL ---
         function openDetailModal(id) {
-            const p = projects.find(x => x.id === id);
+            const p = window.projects.find(x => x.id === id);
             if (!p) return;
+
+            currentModalProjectId = id;
 
             document.getElementById('detailHeader').style.backgroundColor = p.color || '#0284c7';
             document.getElementById('detailTitle').innerText = p.name;
@@ -705,7 +711,6 @@
             document.getElementById('detailStatus').innerText = p.status;
             document.getElementById('detailPriority').innerText = `${p.priority === 'Hoog' ? '🔴' : p.priority === 'Middel' ? '🟡' : '🟢'} ${p.priority}`;
 
-            // Render Materials
             const matContainer = document.getElementById('detailMaterialsList');
             if (p.materials && p.materials.length > 0) {
                 matContainer.innerHTML = p.materials.map((m, idx) => `
@@ -718,7 +723,6 @@
                 matContainer.innerHTML = `<span class="text-slate-400 italic">Geen materialen opgegeven.</span>`;
             }
 
-            // Render Todos
             const todoContainer = document.getElementById('detailTodoList');
             if (p.todos && p.todos.length > 0) {
                 todoContainer.innerHTML = p.todos.map((t, idx) => `
@@ -739,35 +743,38 @@
 
             document.getElementById('detailModal').classList.remove('hidden');
         }
+        window.openDetailModal = openDetailModal;
 
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
+        window.closeDetailModal = closeDetailModal;
 
         function toggleMaterialStatus(projectId, index) {
-            const p = projects.find(x => x.id === projectId);
+            const p = window.projects.find(x => x.id === projectId);
             if (p && p.materials && p.materials[index]) {
                 p.materials[index].bought = !p.materials[index].bought;
-                saveProjectsState();
-                openDetailModal(projectId);
+                window.saveProjectsState();
+                if (currentModalProjectId === projectId) openDetailModal(projectId);
             }
         }
+        window.toggleMaterialStatus = toggleMaterialStatus;
 
         function toggleTodoStatus(projectId, index) {
-            const p = projects.find(x => x.id === projectId);
+            const p = window.projects.find(x => x.id === projectId);
             if (p && p.todos && p.todos[index]) {
                 p.todos[index].done = !p.todos[index].done;
-                saveProjectsState();
-                openDetailModal(projectId);
+                window.saveProjectsState();
+                if (currentModalProjectId === projectId) openDetailModal(projectId);
             }
         }
+        window.toggleTodoStatus = toggleTodoStatus;
 
-        // --- BOODSCHAPPENLIJST ---
         function renderMaterialsPreview() {
             const allMaterials = [];
-            projects.forEach(p => {
+            (window.projects || []).forEach(p => {
                 if (p.materials) {
-                    p.materials.forEach(m => allMaterials.push({ ...m, projectName: p.name, projectColor: p.color }));
+                    p.materials.forEach(m => allMaterials.push({ ...m, projectId: p.id, projectName: p.name, projectColor: p.color }));
                 }
             });
 
@@ -797,10 +804,12 @@
             renderShoppingList();
             document.getElementById('shoppingModal').classList.remove('hidden');
         }
+        window.openShoppingModal = openShoppingModal;
 
         function closeShoppingModal() {
             document.getElementById('shoppingModal').classList.add('hidden');
         }
+        window.closeShoppingModal = closeShoppingModal;
 
         function setMaterialFilter(filter) {
             materialFilter = filter;
@@ -808,6 +817,7 @@
             document.getElementById('filterPendingBtn').className = filter === 'pending' ? 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700';
             renderShoppingList();
         }
+        window.setMaterialFilter = setMaterialFilter;
 
         function renderShoppingList() {
             const container = document.getElementById('shoppingListContainer');
@@ -815,7 +825,7 @@
 
             let hasItems = false;
 
-            projects.forEach(p => {
+            (window.projects || []).forEach(p => {
                 if (!p.materials || p.materials.length === 0) return;
 
                 const filtered = p.materials.filter(m => materialFilter === 'all' || !m.bought);
@@ -852,12 +862,11 @@
             }
         }
 
-        // --- CENTRALE TO-DO LIST ---
         function renderTodoPreview() {
             const allTodos = [];
-            projects.forEach(p => {
+            (window.projects || []).forEach(p => {
                 if (p.todos) {
-                    p.todos.forEach(t => allTodos.push({ ...t, projectName: p.name, projectColor: p.color }));
+                    p.todos.forEach(t => allTodos.push({ ...t, projectId: p.id, projectName: p.name, projectColor: p.color }));
                 }
             });
 
@@ -885,10 +894,12 @@
             renderTodoList();
             document.getElementById('todoModal').classList.remove('hidden');
         }
+        window.openTodoModal = openTodoModal;
 
         function closeTodoModal() {
             document.getElementById('todoModal').classList.add('hidden');
         }
+        window.closeTodoModal = closeTodoModal;
 
         function renderTodoList() {
             const container = document.getElementById('todoListContainer');
@@ -896,7 +907,7 @@
 
             let hasItems = false;
 
-            projects.forEach(p => {
+            (window.projects || []).forEach(p => {
                 if (!p.todos || p.todos.length === 0) return;
 
                 hasItems = true;
@@ -927,12 +938,11 @@
             }
         }
 
-        // --- NOTIFICATIES ---
         function checkNotifications() {
             const notifications = [];
             const now = new Date();
 
-            projects.forEach(p => {
+            (window.projects || []).forEach(p => {
                 if (p.statusUpdatedAt) {
                     const lastUpdate = new Date(p.statusUpdatedAt);
                     const diffDays = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
@@ -979,10 +989,12 @@
 
             document.getElementById('notifModal').classList.remove('hidden');
         }
+        window.openNotifModal = openNotifModal;
 
         function closeNotifModal() {
             document.getElementById('notifModal').classList.add('hidden');
         }
+        window.closeNotifModal = closeNotifModal;
     </script>
 </body>
 </html>
