@@ -330,22 +330,22 @@
             projectId: "houtwerk-schiermonnikoog",
             storageBucket: "houtwerk-schiermonnikoog.firebasestorage.app",
             messagingSenderId: "336400406245",
-            appId: "1:336400406245:web:0fabdddc1ef0449fd7660c"
+            appId: "1:336400406245:web:0fabdddc1ef0449fd7660c",
+            databaseURL: "https://houtwerk-schiermonnikoog-default-rtdb.europe-west1.firebasedatabase.app"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Globale variabelen correct definiëren
         window.currentDate = new Date();
         window.projects = [];
         let materialFilter = 'all';
 
-        // Automatische migratie van oude localStorage data naar Firebase (als Firebase nog leeg is)
+        // Automatische migratie van zowel 'pwa_projects' als 'projects' naar Firebase
         const dbRef = ref(db);
         get(child(dbRef, 'projects')).then((snapshot) => {
             if (!snapshot.exists()) {
-                const localData = localStorage.getItem('projects');
+                const localData = localStorage.getItem('pwa_projects') || localStorage.getItem('projects');
                 if (localData) {
                     try {
                         const parsed = JSON.parse(localData);
@@ -353,7 +353,7 @@
                             const projectsObj = {};
                             parsed.forEach(p => { projectsObj[p.id] = p; });
                             set(ref(db, 'projects'), projectsObj).then(() => {
-                                console.log("Oude lokale gegevens overgezet naar Firebase!");
+                                console.log("Oude lokale gegevens succesvol overgezet naar Firebase!");
                             });
                         }
                     } catch(e) {
@@ -449,7 +449,7 @@
                     
                     <div class="flex items-center justify-between text-[11px]">
                         <span class="bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded-full">${p.status}</span>
-                        <span class="text-slate-400">${p.startDate.slice(5)} t/m ${p.endDate.slice(5)}</span>
+                        <span class="text-slate-400">${p.startDate ? p.startDate.slice(5) : ''} t/m ${p.endDate ? p.endDate.slice(5) : ''}</span>
                     </div>
 
                     ${nextTodo ? `
@@ -532,6 +532,7 @@
                 overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
 
                 const weekProjects = (window.projects || []).filter(p => {
+                    if (!p.startDate || !p.endDate) return false;
                     const pStart = new Date(p.startDate);
                     const pEnd = new Date(p.endDate);
                     pStart.setHours(0,0,0,0);
@@ -620,11 +621,11 @@
                 if (!p) return;
                 document.getElementById('projectId').value = p.id;
                 document.getElementById('projectName').value = p.name;
-                document.getElementById('startDate').value = p.startDate;
-                document.getElementById('endDate').value = p.endDate;
+                document.getElementById('startDate').value = p.startDate || '';
+                document.getElementById('endDate').value = p.endDate || '';
                 document.getElementById('projectColor').value = p.color || '#0284c7';
-                document.getElementById('projectPriority').value = p.priority;
-                document.getElementById('projectStatus').value = p.status;
+                document.getElementById('projectPriority').value = p.priority || 'Middel';
+                document.getElementById('projectStatus').value = p.status || 'In uitvoering';
                 document.getElementById('projectNotes').value = p.notes || '';
                 
                 if (p.materials) p.materials.forEach(m => addMaterialRow(m.name, m.bought));
@@ -719,9 +720,10 @@
 
             document.getElementById('detailHeader').style.backgroundColor = p.color || '#0284c7';
             document.getElementById('detailTitle').innerText = p.name;
-            document.getElementById('detailDates').innerText = `🗓️ ${p.startDate} t/m ${p.endDate}`;
-            document.getElementById('detailStatus').innerText = p.status;
-            document.getElementById('detailPriority').innerText = `${p.priority === 'Hoog' ? '🔴' : p.priority === 'Middel' ? '🟡' : '🟢'} ${p.priority}`;
+            document.getElementById('detailDates').innerText = `🗓️ ${p.startDate || ''} t/m ${p.endDate || ''}`;
+            document.getElementById('detailStatus').innerText = p.status || '';
+            const priorityText = p.priority || 'Middel';
+            document.getElementById('detailPriority').innerText = `${priorityText === 'Hoog' ? '🔴' : priorityText === 'Middel' ? '🟡' : '🟢'} ${priorityText}`;
 
             const matContainer = document.getElementById('detailMaterialsList');
             if (p.materials && p.materials.length > 0) {
