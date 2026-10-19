@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Project & Sport Kalender</title>
+    <title>Projecten Dashboard</title>
     
     <!-- PWA Meta tags -->
     <meta name="theme-color" content="#1e293b">
@@ -14,34 +14,7 @@
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
         .no-select {
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -101,9 +74,7 @@
             </div>
 
             <!-- Calendar Days Container -->
-            <div id="calendarGrid" class="flex-1 flex flex-col min-h-[450px]">
-                <!-- Dynamic grid generated via JavaScript -->
-            </div>
+            <div id="calendarGrid" class="flex-1 flex flex-col min-h-[450px]"></div>
         </div>
 
         <!-- LOWER SECTION: WIDGETS -->
@@ -123,17 +94,17 @@
                 </div>
             </div>
 
-            <!-- SPORT TO-DO PREVIEW WIDGET -->
-            <div onclick="openSportModal()" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 cursor-pointer hover:border-emerald-300 transition">
+            <!-- CENTRALE TO-DO PREVIEW WIDGET -->
+            <div onclick="openTodoModal()" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 cursor-pointer hover:border-emerald-300 transition">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xl">🏃</span>
-                        <h3 class="font-bold text-slate-800">Sport To-Do List</h3>
+                        <span class="text-xl">✅</span>
+                        <h3 class="font-bold text-slate-800">To-Do List</h3>
                     </div>
-                    <span id="sportCountTag" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">0 doelen</span>
+                    <span id="todoCountTag" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">0 taken</span>
                 </div>
-                <div id="sportPreview" class="text-sm text-slate-500 min-h-[50px] flex items-center">
-                    Laden van sportdoelen...
+                <div id="todoPreview" class="text-sm text-slate-500 min-h-[50px] flex items-center">
+                    Laden van taken...
                 </div>
             </div>
 
@@ -200,9 +171,22 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nog in te kopen materiaal (comma-gescheiden)</label>
-                    <textarea id="projectMaterials" rows="2" placeholder="Bijv. Tegels 10m2, Lijm 2x, Kit" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                <!-- DYNAMISCHE MATERIALEN LIJST -->
+                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-600 uppercase">In te kopen materiaal</label>
+                        <button type="button" onclick="addMaterialRow()" class="text-xs bg-amber-500 text-slate-950 font-bold px-2 py-1 rounded hover:bg-amber-400">+ Materiaal toevoegen</button>
+                    </div>
+                    <div id="materialsInputsContainer" class="space-y-2"></div>
+                </div>
+
+                <!-- DYNAMISCHE PROJECT TO-DO LIJST -->
+                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-bold text-slate-600 uppercase">Project To-Do's / Taken</label>
+                        <button type="button" onclick="addTodoRow()" class="text-xs bg-emerald-600 text-white font-bold px-2 py-1 rounded hover:bg-emerald-500">+ Taak toevoegen</button>
+                    </div>
+                    <div id="todosInputsContainer" class="space-y-2"></div>
                 </div>
 
                 <div>
@@ -223,7 +207,7 @@
 
     <!-- MODAL: PROJECT DETAILS -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
             <div id="detailHeader" class="px-6 py-4 text-white flex justify-between items-start">
                 <div>
                     <h3 id="detailTitle" class="font-bold text-xl"></h3>
@@ -232,7 +216,7 @@
                 <button onclick="closeDetailModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
 
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4 overflow-y-auto">
                 <div class="flex justify-between items-center border-b pb-3">
                     <span class="text-xs font-bold text-slate-500 uppercase">Status</span>
                     <span id="detailStatus" class="text-xs px-2.5 py-1 rounded-full font-bold bg-slate-100 text-slate-800"></span>
@@ -245,9 +229,12 @@
 
                 <div>
                     <span class="text-xs font-bold text-slate-500 uppercase block mb-1">In te kopen materiaal</span>
-                    <div id="detailMaterialsList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <!-- Items dynamically populated -->
-                    </div>
+                    <div id="detailMaterialsList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-200"></div>
+                </div>
+
+                <div>
+                    <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Project To-Do's</span>
+                    <div id="detailTodoList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-200"></div>
                 </div>
 
                 <div>
@@ -278,37 +265,24 @@
                     <button onclick="setMaterialFilter('all')" id="filterAllBtn" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Alles</button>
                     <button onclick="setMaterialFilter('pending')" id="filterPendingBtn" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700">Nog te kopen</button>
                 </div>
-                <button onclick="clearBoughtMaterials()" class="text-xs text-rose-600 font-semibold hover:underline">Verwijder gekochte van projecten</button>
             </div>
 
-            <div id="shoppingListContainer" class="p-6 overflow-y-auto space-y-2 flex-1">
-                <!-- Dynamically populated shopping list items -->
-            </div>
+            <div id="shoppingListContainer" class="p-6 overflow-y-auto space-y-2 flex-1"></div>
         </div>
     </div>
 
-    <!-- MODAL: SPORT TO-DO MANAGER -->
-    <div id="sportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
+    <!-- MODAL: CENTRALE TO-DO LIST MANAGER -->
+    <div id="todoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
             <div class="px-6 py-4 bg-emerald-600 text-white flex justify-between items-center">
                 <div class="flex items-center space-x-2">
-                    <span class="text-xl">🏃</span>
-                    <h3 class="font-bold text-lg">Sport To-Do Beheer</h3>
+                    <span class="text-xl">✅</span>
+                    <h3 class="font-bold text-lg">Centrale To-Do Lijst</h3>
                 </div>
-                <button onclick="closeSportModal()" class="text-white/80 hover:text-white text-xl">&times;</button>
+                <button onclick="closeTodoModal()" class="text-white/80 hover:text-white text-xl">&times;</button>
             </div>
 
-            <div class="p-4 bg-slate-50 border-b border-slate-200">
-                <form onsubmit="addSportItem(event)" class="flex space-x-2">
-                    <input type="text" id="sportTitleInput" required placeholder="Bijv. 5km Hardlopen" class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <input type="date" id="sportDateInput" class="border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <button type="submit" class="bg-emerald-600 text-white font-bold px-3 py-2 rounded-lg hover:bg-emerald-500 text-sm">+</button>
-                </form>
-            </div>
-
-            <div id="sportListContainer" class="p-4 overflow-y-auto space-y-2 flex-1">
-                <!-- Dynamically populated sport items -->
-            </div>
+            <div id="todoListContainer" class="p-6 overflow-y-auto space-y-2 flex-1"></div>
         </div>
     </div>
 
@@ -323,66 +297,40 @@
                 <button onclick="closeNotifModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
             </div>
 
-            <div class="p-3 bg-sky-50 border-b border-sky-100 flex items-center justify-between text-xs text-sky-900">
-                <span>Wil je Push-meldingen ontvangen op dit apparaat?</span>
-                <button onclick="requestNotificationPermission()" class="bg-sky-600 text-white font-bold px-2 py-1 rounded hover:bg-sky-700">Inschakelen</button>
-            </div>
-
-            <div id="notifListContainer" class="p-4 overflow-y-auto space-y-2 flex-1">
-                <!-- Dynamic notifications -->
-            </div>
+            <div id="notifListContainer" class="p-4 overflow-y-auto space-y-2 flex-1"></div>
         </div>
     </div>
 
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
-        // --- APP STATE ---
         let currentDate = new Date();
         let projects = JSON.parse(localStorage.getItem('pwa_projects')) || [
             {
                 id: '1',
                 name: 'Badkamer Verbouwen',
-                startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 2).toISOString().split('T')[0],
-                endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 10).toISOString().split('T')[0],
+                startDate: new Date().toISOString().split('T')[0],
+                endDate: new Date(Date.now() + 5*24*60*60*1000).toISOString().split('T')[0],
                 color: '#0284c7',
                 priority: 'Hoog',
                 status: 'In uitvoering',
-                statusUpdatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 dagen geleden
+                statusUpdatedAt: new Date().toISOString(),
                 materials: [
                     { name: 'Vloertegels 15m2', bought: false },
-                    { name: 'Sanitair kit', bought: true },
-                    { name: 'Douchekop set', bought: false }
+                    { name: 'Sanitair kit', bought: true }
                 ],
-                notes: 'Tegelzetter komt op de 5e.'
-            },
-            {
-                id: '2',
-                name: 'Schuur schilderen',
-                startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 8).toISOString().split('T')[0],
-                endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 16).toISOString().split('T')[0],
-                color: '#16a34a',
-                priority: 'Middel',
-                status: 'Offerte gestuurd',
-                statusUpdatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dagen geleden
-                materials: [
-                    { name: 'Grondverf 2.5L', bought: false },
-                    { name: 'Schuurpapier K120', bought: true }
+                todos: [
+                    { name: 'Tegelzetter bellen', done: false },
+                    { name: 'Oude douche slopen', done: true }
                 ],
-                notes: 'Kleur: Antraciet.'
+                notes: 'Tegelzetter komt op afspraak.'
             }
-        ];
-
-        let sportTodos = JSON.parse(localStorage.getItem('pwa_sport_todos')) || [
-            { id: '1', title: '5km Hardlopen in het park', date: new Date().toISOString().split('T')[0], done: false },
-            { id: '2', title: '30 min Krachttraining', date: '', done: true }
         ];
 
         let materialFilter = 'all';
 
-        // --- INIT ---
         window.addEventListener('DOMContentLoaded', () => {
             renderCalendar();
-            renderSportPreview();
+            renderTodoPreview();
             renderMaterialsPreview();
             checkNotifications();
         });
@@ -391,13 +339,8 @@
             localStorage.setItem('pwa_projects', JSON.stringify(projects));
             renderCalendar();
             renderMaterialsPreview();
+            renderTodoPreview();
             checkNotifications();
-        }
-
-        function saveSportState() {
-            localStorage.setItem('pwa_sport_todos', JSON.stringify(sportTodos));
-            renderSportPreview();
-            renderSportList();
         }
 
         // --- CALENDAR ENGINE ---
@@ -408,37 +351,29 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
 
-            // Header date text
             const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
             document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
 
-            // First day of month & total days
             const firstDayOfMonth = new Date(year, month, 1);
             const lastDayOfMonth = new Date(year, month + 1, 0);
             
-            let startingDay = firstDayOfMonth.getDay() - 1; // Mon = 0
-            if (startingDay === -1) startingDay = 6; // Sun = 6
+            let startingDay = firstDayOfMonth.getDay() - 1;
+            if (startingDay === -1) startingDay = 6;
 
             const totalDays = lastDayOfMonth.getDate();
-
-            // Weeks grid builder
             let currentDayCount = 1;
             let prevMonthLastDay = new Date(year, month, 0).getDate();
 
-            // Calculate total weeks needed
             const totalCells = startingDay + totalDays;
             const totalWeeks = Math.ceil(totalCells / 7);
 
             for (let w = 0; w < totalWeeks; w++) {
-                // Create week row container
                 const weekRow = document.createElement('div');
                 weekRow.className = 'grid grid-cols-7 border-b border-slate-200 min-h-[90px] relative flex-1';
 
-                // Calculate week date range
                 const weekStartDate = new Date(year, month, (w * 7) - startingDay + 1);
                 const weekEndDate = new Date(year, month, (w * 7) - startingDay + 7);
 
-                // Render 7 Day Background Cells
                 for (let d = 0; d < 7; d++) {
                     const cellIndex = w * 7 + d;
                     const dayCell = document.createElement('div');
@@ -454,7 +389,6 @@
                         cellDayNum = currentDayCount;
                         isCurrentMonth = true;
 
-                        // Check today
                         const today = new Date();
                         if (today.getDate() === cellDayNum && today.getMonth() === month && today.getFullYear() === year) {
                             dayCell.classList.add('bg-sky-50/60');
@@ -469,11 +403,9 @@
                     weekRow.appendChild(dayCell);
                 }
 
-                // Render Project Overlay Bars for this Week
                 const overlayContainer = document.createElement('div');
                 overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
 
-                // Find projects visible in this week
                 const weekProjects = projects.filter(p => {
                     const pStart = new Date(p.startDate);
                     const pEnd = new Date(p.endDate);
@@ -488,7 +420,6 @@
                     pStart.setHours(0,0,0,0);
                     pEnd.setHours(23,59,59,999);
 
-                    // Compute col start (1-8) and col end (1-8)
                     let startCol = 1;
                     let endCol = 8;
 
@@ -505,7 +436,6 @@
                         const bar = document.createElement('div');
                         bar.className = 'pointer-events-auto h-6 rounded-md text-white text-xs px-2 flex items-center justify-between shadow-sm cursor-pointer hover:brightness-110 transition truncate font-medium';
                         
-                        // Calculate grid position styling
                         const leftPercent = ((startCol - 1) / 7) * 100;
                         const widthPercent = ((endCol - startCol) / 7) * 100;
 
@@ -533,11 +463,38 @@
             renderCalendar();
         }
 
+        // --- PROJECT FORM INPUT DYNAMICS ---
+        function addMaterialRow(name = '', bought = false) {
+            const container = document.getElementById('materialsInputsContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2 material-row';
+            div.innerHTML = `
+                <input type="checkbox" ${bought ? 'checked' : ''} class="mat-bought rounded text-amber-500">
+                <input type="text" value="${name}" placeholder="Bijv. Tegelkit 2x" class="mat-name flex-1 border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-amber-500">
+                <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 font-bold px-1">&times;</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function addTodoRow(name = '', done = false) {
+            const container = document.getElementById('todosInputsContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2 todo-row';
+            div.innerHTML = `
+                <input type="checkbox" ${done ? 'checked' : ''} class="todo-done rounded text-emerald-600">
+                <input type="text" value="${name}" placeholder="Bijv. Leverancier bellen" class="todo-name flex-1 border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-emerald-500">
+                <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 font-bold px-1">&times;</button>
+            `;
+            container.appendChild(div);
+        }
+
         // --- PROJECT MODAL & CRUD ---
         function openProjectModal(id = null) {
             const form = document.getElementById('projectForm');
             form.reset();
-            
+            document.getElementById('materialsInputsContainer').innerHTML = '';
+            document.getElementById('todosInputsContainer').innerHTML = '';
+
             if (id) {
                 const p = projects.find(x => x.id === id);
                 document.getElementById('projectId').value = p.id;
@@ -547,14 +504,18 @@
                 document.getElementById('projectColor').value = p.color || '#0284c7';
                 document.getElementById('projectPriority').value = p.priority;
                 document.getElementById('projectStatus').value = p.status;
-                document.getElementById('projectMaterials').value = p.materials ? p.materials.map(m => m.name).join(', ') : '';
                 document.getElementById('projectNotes').value = p.notes || '';
                 
+                if (p.materials) p.materials.forEach(m => addMaterialRow(m.name, m.bought));
+                if (p.todos) p.todos.forEach(t => addTodoRow(t.name, t.done));
+
                 document.getElementById('projectModalTitle').innerText = 'Project Bewerken';
                 document.getElementById('deleteProjectBtn').classList.remove('hidden');
             } else {
                 document.getElementById('projectId').value = '';
                 document.getElementById('projectColor').value = '#0284c7';
+                addMaterialRow();
+                addTodoRow();
                 document.getElementById('projectModalTitle').innerText = 'Nieuw Project Toevoegen';
                 document.getElementById('deleteProjectBtn').classList.add('hidden');
             }
@@ -575,23 +536,25 @@
             const color = document.getElementById('projectColor').value;
             const priority = document.getElementById('projectPriority').value;
             const status = document.getElementById('projectStatus').value;
-            const rawMaterials = document.getElementById('projectMaterials').value;
             const notes = document.getElementById('projectNotes').value;
 
-            let existingMaterials = [];
-            if (id) {
-                const old = projects.find(x => x.id === id);
-                if (old && old.materials) existingMaterials = old.materials;
-            }
+            // Collect Materials
+            const materials = [];
+            document.querySelectorAll('.material-row').forEach(row => {
+                const mName = row.querySelector('.mat-name').value.trim();
+                const mBought = row.querySelector('.mat-bought').checked;
+                if (mName) materials.push({ name: mName, bought: mBought });
+            });
 
-            // Parse materials preserving 'bought' status if existing
-            const materialsList = rawMaterials.split(',').map(m => m.trim()).filter(m => m.length > 0).map(mName => {
-                const found = existingMaterials.find(em => em.name.toLowerCase() === mName.toLowerCase());
-                return { name: mName, bought: found ? found.bought : false };
+            // Collect Todos
+            const todos = [];
+            document.querySelectorAll('.todo-row').forEach(row => {
+                const tName = row.querySelector('.todo-name').value.trim();
+                const tDone = row.querySelector('.todo-done').checked;
+                if (tName) todos.push({ name: tName, done: tDone });
             });
 
             if (id) {
-                // Update
                 const index = projects.findIndex(p => p.id === id);
                 if (index !== -1) {
                     const statusChanged = projects[index].status !== status;
@@ -599,18 +562,15 @@
                         ...projects[index],
                         name, startDate, endDate, color, priority, status,
                         statusUpdatedAt: statusChanged ? new Date().toISOString() : projects[index].statusUpdatedAt,
-                        materials: materialsList,
-                        notes
+                        materials, todos, notes
                     };
                 }
             } else {
-                // New
                 projects.push({
                     id: Date.now().toString(),
                     name, startDate, endDate, color, priority, status,
                     statusUpdatedAt: new Date().toISOString(),
-                    materials: materialsList,
-                    notes
+                    materials, todos, notes
                 });
             }
 
@@ -636,20 +596,33 @@
             document.getElementById('detailHeader').style.backgroundColor = p.color || '#0284c7';
             document.getElementById('detailTitle').innerText = p.name;
             document.getElementById('detailDates').innerText = `🗓️ ${p.startDate} t/m ${p.endDate}`;
-            
             document.getElementById('detailStatus').innerText = p.status;
             document.getElementById('detailPriority').innerText = `${p.priority === 'Hoog' ? '🔴' : p.priority === 'Middel' ? '🟡' : '🟢'} ${p.priority}`;
 
+            // Render Materials
             const matContainer = document.getElementById('detailMaterialsList');
             if (p.materials && p.materials.length > 0) {
                 matContainer.innerHTML = p.materials.map((m, idx) => `
                     <div class="flex items-center space-x-2">
-                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}', ${idx})" class="rounded text-sky-600">
+                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}', ${idx})" class="rounded text-amber-500">
                         <span class="${m.bought ? 'line-through text-slate-400' : 'text-slate-700'}">${m.name}</span>
                     </div>
                 `).join('');
             } else {
                 matContainer.innerHTML = `<span class="text-slate-400 italic">Geen materialen opgegeven.</span>`;
+            }
+
+            // Render Todos
+            const todoContainer = document.getElementById('detailTodoList');
+            if (p.todos && p.todos.length > 0) {
+                todoContainer.innerHTML = p.todos.map((t, idx) => `
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoStatus('${p.id}', ${idx})" class="rounded text-emerald-600">
+                        <span class="${t.done ? 'line-through text-slate-400' : 'text-slate-700'}">${t.name}</span>
+                    </div>
+                `).join('');
+            } else {
+                todoContainer.innerHTML = `<span class="text-slate-400 italic">Geen to-do's opgegeven.</span>`;
             }
 
             document.getElementById('detailNotes').innerText = p.notes || 'Geen notities.';
@@ -670,11 +643,20 @@
             if (p && p.materials && p.materials[index]) {
                 p.materials[index].bought = !p.materials[index].bought;
                 saveProjectsState();
-                openDetailModal(projectId); // Refresh view
+                openDetailModal(projectId);
             }
         }
 
-        // --- MATERIALS / SHOPPING LIST ---
+        function toggleTodoStatus(projectId, index) {
+            const p = projects.find(x => x.id === projectId);
+            if (p && p.todos && p.todos[index]) {
+                p.todos[index].done = !p.todos[index].done;
+                saveProjectsState();
+                openDetailModal(projectId);
+            }
+        }
+
+        // --- BOODSCHAPPENLIJST ---
         function renderMaterialsPreview() {
             const allMaterials = [];
             projects.forEach(p => {
@@ -765,135 +747,105 @@
             }
         }
 
-        function clearBoughtMaterials() {
-            if (confirm('Weet je zeker dat je alle reeds gekochte materialen definitief uit de projecten wilt verwijderen?')) {
-                projects.forEach(p => {
-                    if (p.materials) {
-                        p.materials = p.materials.filter(m => !m.bought);
-                    }
-                });
-                saveProjectsState();
-                renderShoppingList();
-            }
-        }
+        // --- CENTRALE TO-DO LIST ---
+        function renderTodoPreview() {
+            const allTodos = [];
+            projects.forEach(p => {
+                if (p.todos) {
+                    p.todos.forEach(t => allTodos.push({ ...t, projectName: p.name, projectColor: p.color }));
+                }
+            });
 
-        // --- SPORT TO-DO MANAGER ---
-        function renderSportPreview() {
-            const pending = sportTodos.filter(t => !t.done);
-            document.getElementById('sportCountTag').innerText = `${pending.length} doelen`;
+            const pending = allTodos.filter(t => !t.done);
+            document.getElementById('todoCountTag').innerText = `${pending.length} openstaand`;
 
-            const preview = document.getElementById('sportPreview');
-            if (sportTodos.length === 0) {
-                preview.innerHTML = `<span class="text-slate-400 italic">Geen sport doelen. Klik om toe te voegen!</span>`;
+            const preview = document.getElementById('todoPreview');
+            if (allTodos.length === 0) {
+                preview.innerHTML = `<span class="text-slate-400 italic">Geen to-do's aanwezig.</span>`;
+            } else if (pending.length === 0) {
+                preview.innerHTML = `<span class="text-emerald-600 font-medium">✓ Alle taken zijn afgerond!</span>`;
             } else {
                 preview.innerHTML = `<div class="space-y-1 w-full">
-                    ${sportTodos.slice(0, 3).map(t => `
+                    ${pending.slice(0, 3).map(t => `
                         <div class="flex items-center justify-between text-xs">
-                            <span class="${t.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${t.done ? '✓' : '⚪'} ${t.title}</span>${t.date ? `<span class="text-slate-400 text-[10px]">${t.date}</span>` : ''}
+                            <span class="text-slate-700 font-medium truncate">• ${t.name}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] text-white" style="background-color:${t.projectColor}">${t.projectName}</span>
                         </div>
                     `).join('')}
+                    ${pending.length > 3 ? `<span class="text-[11px] text-slate-400 block pt-1">+ nog ${pending.length - 3} andere taken...</span>` : ''}
                 </div>`;
             }
         }
 
-        function openSportModal() {
-            renderSportList();
-            document.getElementById('sportModal').classList.remove('hidden');
+        function openTodoModal() {
+            renderTodoList();
+            document.getElementById('todoModal').classList.remove('hidden');
         }
 
-        function closeSportModal() {
-            document.getElementById('sportModal').classList.add('hidden');
+        function closeTodoModal() {
+            document.getElementById('todoModal').classList.add('hidden');
         }
 
-        function renderSportList() {
-            const container = document.getElementById('sportListContainer');
+        function renderTodoList() {
+            const container = document.getElementById('todoListContainer');
             container.innerHTML = '';
 
-            if (sportTodos.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">Nog geen sport doelen toegevoegd.</div>`;
-                return;
-            }
+            let hasItems = false;
 
-            sportTodos.forEach((t, idx) => {
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg';
-                item.innerHTML = `
-                    <div class="flex items-center space-x-2 flex-1 mr-2">
-                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleSportTodo(${idx})" class="rounded text-emerald-600">
-                        <div class="flex flex-col">
-                            <span class="text-sm ${t.done ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${t.title}</span>
-                            ${t.date ? `<span class="text-[10px] text-slate-400">📅 ${t.date}</span>` : ''}
-                        </div>
+            projects.forEach(p => {
+                if (!p.todos || p.todos.length === 0) return;
+
+                hasItems = true;
+
+                const group = document.createElement('div');
+                group.className = 'mb-4 border border-slate-200 rounded-lg p-3 bg-slate-50';
+                group.innerHTML = `
+                    <div class="flex items-center justify-between border-b pb-2 mb-2">
+                        <span class="font-bold text-xs uppercase px-2 py-0.5 rounded text-white" style="background-color:${p.color}">${p.name}</span>
                     </div>
-                    <button onclick="deleteSportTodo(${idx})" class="text-rose-500 hover:text-rose-700 text-sm font-bold">&times;</button>
+                    <div class="space-y-2">
+                        ${p.todos.map((t, idx) => `
+                            <label class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoStatus('${p.id}',${idx})" class="rounded text-emerald-600">
+                                    <span class="text-sm ${t.done ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${t.name}</span>
+                                </div>
+                                <span class="text-xs ${t.done ? 'text-emerald-600 font-semibold' : 'text-slate-500'}">${t.done ? 'Afgerond' : 'Open'}</span>
+                            </label>
+                        `).join('')}
+                    </div>
                 `;
-                container.appendChild(item);
+                container.appendChild(group);
             });
+
+            if (!hasItems) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen project to-do's aanwezig.</div>`;
+            }
         }
 
-        function addSportItem(e) {
-            e.preventDefault();
-            const title = document.getElementById('sportTitleInput').value;
-            const date = document.getElementById('sportDateInput').value;
-
-            sportTodos.push({ id: Date.now().toString(), title, date, done: false });
-            saveSportState();
-
-            document.getElementById('sportTitleInput').value = '';
-            document.getElementById('sportDateInput').value = '';
-        }
-
-        function toggleSportTodo(idx) {
-            sportTodos[idx].done = !sportTodos[idx].done;
-            saveSportState();
-        }
-
-        function deleteSportTodo(idx) {
-            sportTodos.splice(idx, 1);
-            saveSportState();
-        }
-
-        // --- NOTIFICATIONS & ALERTS SYSTEM ---
+        // --- NOTIFICATIES ---
         function checkNotifications() {
             const notifications = [];
             const now = new Date();
 
             projects.forEach(p => {
-                // 1. Check if status hasn't been updated for > 5 days
                 if (p.statusUpdatedAt) {
                     const lastUpdate = new Date(p.statusUpdatedAt);
                     const diffDays = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
                     if (diffDays >= 5 && p.status !== 'Afgerond') {
                         notifications.push({
-                            type: 'status_stale',
                             title: `Status Update Herinnering: ${p.name}`,
-                            msg: `De status staat al ${diffDays} dagen op "${p.status}". Is er al voortgang?`,
+                            msg: `De status staat al ${diffDays} dagen op "${p.status}".`,
                             projectId: p.id
                         });
                     }
                 }
-
-                // 2. Check if project starts in <= 7 days and has unbought materials
-                const startDate = new Date(p.startDate);
-                const daysToStart = Math.ceil((startDate - now) / (1000 * 60 * 60 * 24));
-                const unbought = p.materials ? p.materials.filter(m => !m.bought) : [];
-
-                if (daysToStart >= 0 && daysToStart <= 7 && unbought.length > 0) {
-                    notifications.push({
-                        type: 'material_check',
-                        title: `Materiaal Check: ${p.name}`,
-                        msg: `Project begint over ${daysToStart} dag(en), maar er staan nog ${unbought.length} materialen open op de lijst!`,
-                        projectId: p.id
-                    });
-                }
             });
 
-            // Update Notification Badge
             const badge = document.getElementById('notifBadge');
             badge.innerText = notifications.length;
             badge.classList.toggle('hidden', notifications.length === 0);
 
-            // Store in DOM for modal
             window.activeNotifications = notifications;
         }
 
@@ -926,20 +878,6 @@
 
         function closeNotifModal() {
             document.getElementById('notifModal').classList.add('hidden');
-        }
-
-        function requestNotificationPermission() {
-            if ("Notification" in window) {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        alert("Push-notificaties zijn succesvol ingeschakeld!");
-                    } else {
-                        alert("Notificatie toestemming werd geweigerd.");
-                    }
-                });
-            } else {
-                alert("Je browser ondersteunt helaas geen Push-notificaties.");
-            }
         }
     </script>
 </body>
