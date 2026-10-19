@@ -336,6 +336,20 @@
 
     <!-- JAVASCRIPT APP LOGIC -->
     <script>
+        // AUTOMATISCHE CACHE KILLER FORCEREN VOOR TELEFOON
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+
         let currentDate = new Date();
         let projects = JSON.parse(localStorage.getItem('pwa_projects')) || [
             {
