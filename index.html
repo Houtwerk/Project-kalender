@@ -6,7 +6,7 @@
     <title>Projecten Dashboard</title>
     
     <!-- PWA Meta tags -->
-    <meta name="theme-color" content="#1e293b">
+    <meta name="theme-color" content="#334155">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Projecten">
@@ -34,11 +34,11 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col no-select">
 
-    <!-- HEADER / NAVIGATION -->
-    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+    <!-- HEADER / NAVIGATION (Donkergrijs & subtiele afronding) -->
+    <header class="bg-slate-800 text-white sticky top-0 z-30 shadow-md">
         <div class="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200" title="Zijpaneel">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200" title="Zijpaneel">
                     📋
                 </button>
                 <span class="text-2xl">📅</span>
@@ -50,18 +50,18 @@
             
             <div class="flex items-center space-x-2">
                 <!-- Shopping list btn -->
-                <button onclick="openShoppingModal()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition" title="Boodschappenlijst">
+                <button onclick="openShoppingModal()" class="relative p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 transition" title="Boodschappenlijst">
                     <span class="text-lg">🛒</span>
                     <span id="shoppingBadge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
                 <!-- Notifications btn -->
-                <button onclick="openNotifModal()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition" title="Notificaties">
+                <button onclick="openNotifModal()" class="relative p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 transition" title="Notificaties">
                     <span class="text-lg">🔔</span>
                     <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
-                <button onclick="openProjectModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center space-x-1 shadow transition">
+                <button onclick="openProjectModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-3 py-2 rounded-md flex items-center space-x-1 shadow transition">
                     <span class="text-base">+</span>
                     <span class="hidden sm:inline">Nieuw Project</span>
                 </button>
@@ -69,11 +69,11 @@
         </div>
     </header>
 
-    <!-- MAIN WRAPPER (SIDEBAR + CALENDAR) -->
+    <!-- MAIN WRAPPER -->
     <div class="flex-1 max-w-[1600px] w-full mx-auto p-2 sm:p-4 flex gap-4 relative">
         
-        <!-- SIDEBAR: PROJECT OVERZICHT OP PRIORITEIT -->
-        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-80 bg-white border border-slate-200 rounded-xl p-4 flex flex-col shadow-lg lg:shadow-none transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out h-[calc(100vh-80px)] lg:h-auto">
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-80 bg-white border border-slate-200 rounded-lg p-4 flex flex-col shadow-lg lg:shadow-none transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out h-[calc(100vh-80px)] lg:h-auto">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
                 <div class="flex items-center space-x-2">
                     <span class="text-lg">🎯</span>
@@ -87,27 +87,27 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT (CALENDAR & WIDGETS) -->
+        <!-- MAIN CONTENT -->
         <main class="flex-1 flex flex-col gap-4 min-w-0">
             
-            <!-- CALENDAR HEADER / MONTH SWITCHER -->
-            <div class="bg-white rounded-xl shadow-sm p-3 sm:p-4 flex items-center justify-between border border-slate-200">
-                <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 font-bold">&lt; Vorige</button>
+            <!-- CALENDAR HEADER -->
+            <div class="bg-white rounded-lg shadow-sm p-3 sm:p-4 flex items-center justify-between border border-slate-200">
+                <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-md text-slate-600 font-bold">&lt; Vorige</button>
                 <h2 id="currentMonthYear" class="text-lg sm:text-xl font-bold text-slate-800 capitalize"></h2>
-                <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 font-bold">Volgende &gt;</button>
+                <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-md text-slate-600 font-bold">Volgende &gt;</button>
             </div>
 
-            <!-- CALENDAR GRID CONTAINER -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <!-- CALENDAR GRID -->
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                 <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center font-semibold text-xs sm:text-sm text-slate-500 py-2">
                     <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
                 </div>
                 <div id="calendarGrid" class="flex-1 flex flex-col min-h-[450px]"></div>
             </div>
 
-            <!-- LOWER SECTION: WIDGETS -->
+            <!-- LOWER WIDGETS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-48">
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex flex-col h-48">
                     <div onclick="openShoppingModal()" class="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition">
                         <div class="flex items-center space-x-2">
                             <span class="text-xl">🛒</span>
@@ -118,7 +118,7 @@
                     <div id="materialsPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">Laden...</div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-48">
+                <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-4 flex flex-col h-48">
                     <div onclick="openTodoModal()" class="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition">
                         <div class="flex items-center space-x-2">
                             <span class="text-xl">✅</span>
@@ -134,8 +134,8 @@
 
     <!-- MODAL: ADD / EDIT PROJECT -->
     <div id="projectModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 bg-slate-800 text-white flex justify-between items-center">
                 <h3 id="projectModalTitle" class="font-bold text-lg">Nieuw Project Toevoegen</h3>
                 <button onclick="closeProjectModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
             </div>
@@ -145,28 +145,28 @@
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Projectnaam</label>
-                    <input type="text" id="projectName" required placeholder="Bijv. Badkamer verbouwen" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="text" id="projectName" required placeholder="Bijv. Badkamer verbouwen" class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Startdatum</label>
-                        <input type="date" id="startDate" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        <input type="date" id="startDate" required class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Einddatum</label>
-                        <input type="date" id="endDate" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        <input type="date" id="endDate" required class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Projectkleur</label>
-                        <input type="color" id="projectColor" value="#0284c7" class="w-full h-10 border border-slate-300 rounded-lg p-1 cursor-pointer">
+                        <input type="color" id="projectColor" value="#0284c7" class="w-full h-10 border border-slate-300 rounded-md p-1 cursor-pointer">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Prioriteit</label>
-                        <select id="projectPriority" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        <select id="projectPriority" class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                             <option value="Hoog">🔴 Hoog</option>
                             <option value="Middel" selected>🟡 Middel</option>
                             <option value="Laag">🟢 Laag</option>
@@ -176,7 +176,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Status</label>
-                    <select id="projectStatus" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <select id="projectStatus" class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                         <option value="Afspraak maken">Afspraak maken</option>
                         <option value="Offerte sturen">Offerte sturen</option>
                         <option value="Offerte gestuurd">Offerte gestuurd</option>
@@ -191,7 +191,7 @@
                     </select>
                 </div>
 
-                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50">
+                <div class="border border-slate-200 p-3 rounded-md bg-slate-50">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold text-slate-600 uppercase">In te kopen materiaal</label>
                         <button type="button" onclick="addMaterialRow()" class="text-xs bg-amber-500 text-slate-950 font-bold px-2 py-1 rounded hover:bg-amber-400">+ Materiaal toevoegen</button>
@@ -199,7 +199,7 @@
                     <div id="materialsInputsContainer" class="space-y-2"></div>
                 </div>
 
-                <div class="border border-slate-200 p-3 rounded-lg bg-slate-50">
+                <div class="border border-slate-200 p-3 rounded-md bg-slate-50">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold text-slate-600 uppercase">Project To-Do's / Taken</label>
                         <button type="button" onclick="addTodoRow()" class="text-xs bg-emerald-600 text-white font-bold px-2 py-1 rounded hover:bg-emerald-500">+ Taak toevoegen</button>
@@ -209,14 +209,14 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Notities</label>
-                    <textarea id="projectNotes" rows="2" placeholder="Extra opmerkingen..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                    <textarea id="projectNotes" rows="2" placeholder="Extra opmerkingen..." class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
                 </div>
 
                 <div class="flex justify-between items-center pt-2">
                     <button type="button" id="deleteProjectBtn" onclick="deleteProject()" class="text-rose-600 hover:text-rose-800 text-sm font-semibold hidden">Verwijderen</button>
                     <div class="flex space-x-2 ml-auto">
-                        <button type="button" onclick="closeProjectModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 text-sm font-medium hover:bg-slate-50">Annuleren</button>
-                        <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-sm font-semibold shadow">Opslaan</button>
+                        <button type="button" onclick="closeProjectModal()" class="px-4 py-2 border border-slate-300 rounded-md text-slate-600 text-sm font-medium hover:bg-slate-50">Annuleren</button>
+                        <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-md text-sm font-semibold shadow">Opslaan</button>
                     </div>
                 </div>
             </form>
@@ -225,7 +225,7 @@
 
     <!-- MODAL: PROJECT DETAILS -->
     <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
             <div id="detailHeader" class="px-6 py-4 text-white flex justify-between items-start">
                 <div>
                     <h3 id="detailTitle" class="font-bold text-xl"></h3>
@@ -247,21 +247,21 @@
 
                 <div>
                     <span class="text-xs font-bold text-slate-500 uppercase block mb-1">In te kopen materiaal</span>
-                    <div id="detailMaterialsList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-200"></div>
+                    <div id="detailMaterialsList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-md border border-slate-200"></div>
                 </div>
 
                 <div>
                     <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Project To-Do's</span>
-                    <div id="detailTodoList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-200"></div>
+                    <div id="detailTodoList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-md border border-slate-200"></div>
                 </div>
 
                 <div>
                     <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Notities</span>
-                    <p id="detailNotes" class="text-sm text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200 whitespace-pre-line"></p>
+                    <p id="detailNotes" class="text-sm text-slate-600 bg-slate-50 p-2.5 rounded-md border border-slate-200 whitespace-pre-line"></p>
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-2">
-                    <button id="editProjectBtn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg">Bewerken</button>
+                    <button id="editProjectBtn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold rounded-md">Bewerken</button>
                 </div>
             </div>
         </div>
@@ -269,7 +269,7 @@
 
     <!-- MODAL: BOODSCHAPPENLIJST -->
     <div id="shoppingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
             <div class="px-6 py-4 bg-amber-500 text-slate-950 flex justify-between items-center">
                 <div class="flex items-center space-x-2">
                     <span class="text-2xl">🛒</span>
@@ -280,8 +280,8 @@
 
             <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div class="flex space-x-2">
-                    <button onclick="setMaterialFilter('all')" id="filterAllBtn" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Alles</button>
-                    <button onclick="setMaterialFilter('pending')" id="filterPendingBtn" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700">Nog te kopen</button>
+                    <button onclick="setMaterialFilter('all')" id="filterAllBtn" class="px-3 py-1 text-xs font-bold rounded-md bg-slate-800 text-white">Alles</button>
+                    <button onclick="setMaterialFilter('pending')" id="filterPendingBtn" class="px-3 py-1 text-xs font-bold rounded-md bg-slate-200 text-slate-700">Nog te kopen</button>
                 </div>
             </div>
 
@@ -291,7 +291,7 @@
 
     <!-- MODAL: CENTRALE TO-DO LIST MANAGER -->
     <div id="todoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
             <div class="px-6 py-4 bg-emerald-600 text-white flex justify-between items-center">
                 <div class="flex items-center space-x-2">
                     <span class="text-xl">✅</span>
@@ -306,8 +306,8 @@
 
     <!-- MODAL: NOTIFICATIES -->
     <div id="notifModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[80vh]">
-            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="px-6 py-4 bg-slate-800 text-white flex justify-between items-center">
                 <div class="flex items-center space-x-2">
                     <span class="text-xl">🔔</span>
                     <h3 class="font-bold text-lg">Notificaties & Herinneringen</h3>
@@ -341,7 +341,6 @@
         window.projects = [];
         let materialFilter = 'all';
 
-        // Automatische migratie van zowel 'pwa_projects' als 'projects' naar Firebase
         const dbRef = ref(db);
         get(child(dbRef, 'projects')).then((snapshot) => {
             if (!snapshot.exists()) {
@@ -365,7 +364,6 @@
             console.error(error);
         });
 
-        // Luister live naar wijzigingen in Firebase
         const projectsRef = ref(db, 'projects');
         onValue(projectsRef, (snapshot) => {
             const data = snapshot.val();
@@ -433,7 +431,7 @@
 
             sortedProjects.forEach(p => {
                 const card = document.createElement('div');
-                card.className = 'p-3 rounded-lg border-l-4 bg-slate-50 hover:bg-slate-100 transition cursor-pointer border border-slate-200 shadow-sm flex flex-col gap-1.5';
+                card.className = 'p-3 rounded-md border-l-4 bg-slate-50 hover:bg-slate-100 transition cursor-pointer border border-slate-200 shadow-sm flex flex-col gap-1.5';
                 card.style.borderLeftColor = p.color || '#0284c7';
                 card.onclick = () => openDetailModal(p.id);
 
@@ -814,6 +812,7 @@
             }
         }
 
+        // Gecorrigeerde functies voor de Boodschappenlijst modal
         function openShoppingModal() {
             renderShoppingList();
             document.getElementById('shoppingModal').classList.remove('hidden');
@@ -827,8 +826,8 @@
 
         function setMaterialFilter(filter) {
             materialFilter = filter;
-            document.getElementById('filterAllBtn').className = filter === 'all' ? 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700';
-            document.getElementById('filterPendingBtn').className = filter === 'pending' ? 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700';
+            document.getElementById('filterAllBtn').className = filter === 'all' ? 'px-3 py-1 text-xs font-bold rounded-md bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-md bg-slate-200 text-slate-700';
+            document.getElementById('filterPendingBtn').className = filter === 'pending' ? 'px-3 py-1 text-xs font-bold rounded-md bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-md bg-slate-200 text-slate-700';
             renderShoppingList();
         }
         window.setMaterialFilter = setMaterialFilter;
@@ -848,7 +847,7 @@
                 hasItems = true;
 
                 const group = document.createElement('div');
-                group.className = 'mb-4 border border-slate-200 rounded-lg p-3 bg-slate-50';
+                group.className = 'mb-4 border border-slate-200 rounded-md p-3 bg-slate-50';
                 group.innerHTML = `
                     <div class="flex items-center justify-between border-b pb-2 mb-2">
                         <span class="font-bold text-xs uppercase px-2 py-0.5 rounded text-white" style="background-color:${p.color}">${p.name}</span>
@@ -927,7 +926,7 @@
                 hasItems = true;
 
                 const group = document.createElement('div');
-                group.className = 'mb-4 border border-slate-200 rounded-lg p-3 bg-slate-50';
+                group.className = 'mb-4 border border-slate-200 rounded-md p-3 bg-slate-50';
                 group.innerHTML = `
                     <div class="flex items-center justify-between border-b pb-2 mb-2">
                         <span class="font-bold text-xs uppercase px-2 py-0.5 rounded text-white" style="background-color:${p.color}">${p.name}</span>
@@ -988,7 +987,7 @@
             } else {
                 notifs.forEach(n => {
                     const item = document.createElement('div');
-                    item.className = 'p-3 bg-amber-50 border border-amber-200 rounded-lg cursor-pointer hover:bg-amber-100 transition';
+                    item.className = 'p-3 bg-amber-50 border border-amber-200 rounded-md cursor-pointer hover:bg-amber-100 transition';
                     item.onclick = () => {
                         closeNotifModal();
                         openDetailModal(n.projectId);
