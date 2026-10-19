@@ -44,7 +44,7 @@
                 <span class="text-2xl">📅</span>
                 <div>
                     <h1 class="font-bold text-lg leading-none">Projecten Dashboard</h1>
-                    <span class="text-xs text-slate-400">Cloud Synchronisatie Actief</span>
+                    <span class="text-xs text-slate-400">Cloud Migratie & Sync Actief</span>
                 </div>
             </div>
             
@@ -84,7 +84,7 @@
 
             <!-- Scrollable list of projects sorted by priority -->
             <div id="priorityList" class="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
-                <div class="text-center py-6 text-slate-400 text-xs italic">Verbinding maken met cloud...</div>
+                <div class="text-center py-6 text-slate-400 text-xs italic">Gegevens laden...</div>
             </div>
         </aside>
 
@@ -334,10 +334,10 @@
         </div>
     </div>
 
-    <!-- FIREBASE & APP LOGIC -->
+    <!-- FIREBASE & APP LOGIC MET MIGRATIE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyABGGFzDqh76OwDWzkbqX7tbY1ndkkZ8Ng",
@@ -354,6 +354,31 @@
         let currentDate = new Date();
         window.projects = [];
         let materialFilter = 'all';
+
+        // Controleer bij opstarten of er nog data in localStorage staat en upload deze eenmalig naar Firebase als de database leeg is
+        const dbRef = ref(db);
+        get(child(dbRef, 'projects')).then((snapshot) => {
+            if (!snapshot.exists()) {
+                // Firebase is leeg, check of oude localStorage data bestaat
+                const localData = localStorage.getItem('projects');
+                if (localData) {
+                    try {
+                        const parsed = JSON.parse(localData);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            const projectsObj = {};
+                            parsed.forEach(p => { projectsObj[p.id] = p; });
+                            set(ref(db, 'projects'), projectsObj).then(() => {
+                                console.log("Oude lokale gegevens succesvol overgezet naar Firebase!");
+                            });
+                        }
+                    } catch(e) {
+                        console.error("Fout bij importeren lokale data", e);
+                    }
+                }
+            }
+        }).catch((error) => {
+            console.error(error);
+        });
 
         // Luister live naar wijzigingen in Firebase
         const projectsRef = ref(db, 'projects');
