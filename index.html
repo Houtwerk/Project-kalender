@@ -44,7 +44,7 @@
                 <span class="text-2xl">📅</span>
                 <div>
                     <h1 class="font-bold text-lg leading-none">Projecten Dashboard</h1>
-                    <span class="text-xs text-slate-400">Cloud Migratie & Sync Actief</span>
+                    <span class="text-xs text-slate-400">Cloud Synchronisatie Actief</span>
                 </div>
             </div>
             
@@ -82,7 +82,6 @@
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 text-xl font-bold">&times;</button>
             </div>
 
-            <!-- Scrollable list of projects sorted by priority -->
             <div id="priorityList" class="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-1">
                 <div class="text-center py-6 text-slate-400 text-xs italic">Gegevens laden...</div>
             </div>
@@ -100,19 +99,14 @@
 
             <!-- CALENDAR GRID CONTAINER -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                <!-- Days of Week Header -->
                 <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center font-semibold text-xs sm:text-sm text-slate-500 py-2">
                     <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
                 </div>
-
-                <!-- Calendar Days Container -->
                 <div id="calendarGrid" class="flex-1 flex flex-col min-h-[450px]"></div>
             </div>
 
-            <!-- LOWER SECTION: WIDGETS (SCROLLBAAR) -->
+            <!-- LOWER SECTION: WIDGETS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                <!-- MATERIALS WIDGET PREVIEW -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-48">
                     <div onclick="openShoppingModal()" class="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition">
                         <div class="flex items-center space-x-2">
@@ -121,12 +115,9 @@
                         </div>
                         <span id="materialsCountTag" class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">0 items</span>
                     </div>
-                    <div id="materialsPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">
-                        Laden...
-                    </div>
+                    <div id="materialsPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">Laden...</div>
                 </div>
 
-                <!-- CENTRALE TO-DO PREVIEW WIDGET -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-48">
                     <div onclick="openTodoModal()" class="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition">
                         <div class="flex items-center space-x-2">
@@ -135,13 +126,9 @@
                         </div>
                         <span id="todoCountTag" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">0 taken</span>
                     </div>
-                    <div id="todoPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">
-                        Laden...
-                    </div>
+                    <div id="todoPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">Laden...</div>
                 </div>
-
             </div>
-
         </main>
     </div>
 
@@ -204,7 +191,6 @@
                     </select>
                 </div>
 
-                <!-- DYNAMISCHE MATERIALEN LIJST -->
                 <div class="border border-slate-200 p-3 rounded-lg bg-slate-50">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold text-slate-600 uppercase">In te kopen materiaal</label>
@@ -213,7 +199,6 @@
                     <div id="materialsInputsContainer" class="space-y-2"></div>
                 </div>
 
-                <!-- DYNAMISCHE PROJECT TO-DO LIJST -->
                 <div class="border border-slate-200 p-3 rounded-lg bg-slate-50">
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-bold text-slate-600 uppercase">Project To-Do's / Taken</label>
@@ -334,7 +319,7 @@
         </div>
     </div>
 
-    <!-- FIREBASE & APP LOGIC MET MIGRATIE SCRIPT -->
+    <!-- APPLICATION & FIREBASE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -351,15 +336,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let currentDate = new Date();
+        // Globale variabelen correct definiëren
+        window.currentDate = new Date();
         window.projects = [];
         let materialFilter = 'all';
 
-        // Controleer bij opstarten of er nog data in localStorage staat en upload deze eenmalig naar Firebase als de database leeg is
+        // Automatische migratie van oude localStorage data naar Firebase (als Firebase nog leeg is)
         const dbRef = ref(db);
         get(child(dbRef, 'projects')).then((snapshot) => {
             if (!snapshot.exists()) {
-                // Firebase is leeg, check of oude localStorage data bestaat
                 const localData = localStorage.getItem('projects');
                 if (localData) {
                     try {
@@ -368,7 +353,7 @@
                             const projectsObj = {};
                             parsed.forEach(p => { projectsObj[p.id] = p; });
                             set(ref(db, 'projects'), projectsObj).then(() => {
-                                console.log("Oude lokale gegevens succesvol overgezet naar Firebase!");
+                                console.log("Oude lokale gegevens overgezet naar Firebase!");
                             });
                         }
                     } catch(e) {
@@ -409,6 +394,11 @@
         window.renderTodoPreview = renderTodoPreview;
         window.renderMaterialsPreview = renderMaterialsPreview;
         window.checkNotifications = checkNotifications;
+
+        window.changeMonth = function(delta) {
+            window.currentDate.setMonth(window.currentDate.getMonth() + delta);
+            renderCalendar();
+        };
 
         window.addEventListener('DOMContentLoaded', () => {
             renderCalendar();
@@ -484,7 +474,10 @@
             const month = currentDate.getMonth();
 
             const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
-            document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
+            const monthHeader = document.getElementById('currentMonthYear');
+            if (monthHeader) {
+                monthHeader.innerText = `${monthNames[month]} ${year}`;
+            }
 
             const firstDayOfMonth = new Date(year, month, 1);
             const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -589,12 +582,6 @@
                 grid.appendChild(weekRow);
             }
         }
-
-        function changeMonth(delta) {
-            window.currentDate.setMonth(window.currentDate.getMonth() + delta);
-            renderCalendar();
-        }
-        window.changeMonth = changeMonth;
 
         function addMaterialRow(name = '', bought = false) {
             const container = document.getElementById('materialsInputsContainer');
