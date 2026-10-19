@@ -34,7 +34,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col no-select">
 
-    <!-- HEADER / NAVIGATION (Donkergrijs & subtiele afronding) -->
+    <!-- HEADER / NAVIGATION (Donkergrijs & strakke afronding) -->
     <header class="bg-slate-800 text-white sticky top-0 z-30 shadow-md">
         <div class="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -50,18 +50,18 @@
             
             <div class="flex items-center space-x-2">
                 <!-- Shopping list btn -->
-                <button onclick="openShoppingModal()" class="relative p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 transition" title="Boodschappenlijst">
+                <button onclick="openShoppingModal()" class="relative p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 transition cursor-pointer" title="Boodschappenlijst">
                     <span class="text-lg">🛒</span>
                     <span id="shoppingBadge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
                 <!-- Notifications btn -->
-                <button onclick="openNotifModal()" class="relative p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 transition" title="Notificaties">
+                <button onclick="openNotifModal()" class="relative p-2 bg-slate-700 hover:bg-slate-600 rounded-md text-slate-200 transition cursor-pointer" title="Notificaties">
                     <span class="text-lg">🔔</span>
                     <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
                 </button>
 
-                <button onclick="openProjectModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-3 py-2 rounded-md flex items-center space-x-1 shadow transition">
+                <button onclick="openProjectModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-3 py-2 rounded-md flex items-center space-x-1 shadow transition cursor-pointer">
                     <span class="text-base">+</span>
                     <span class="hidden sm:inline">Nieuw Project</span>
                 </button>
@@ -319,6 +319,71 @@
         </div>
     </div>
 
+    <script>
+        // HOOFDFUNCTIES DIRECT BESCHIKBAAR MAKEN VOOR ONCLICK EVENTS
+        let currentModalProjectId = null;
+        let materialFilter = 'all';
+
+        function openShoppingModal() {
+            if (typeof renderShoppingList === 'function') renderShoppingList();
+            document.getElementById('shoppingModal').classList.remove('hidden');
+        }
+        window.openShoppingModal = openShoppingModal;
+
+        function closeShoppingModal() {
+            document.getElementById('shoppingModal').classList.add('hidden');
+        }
+        window.closeShoppingModal = closeShoppingModal;
+
+        function openTodoModal() {
+            if (typeof renderTodoList === 'function') renderTodoList();
+            document.getElementById('todoModal').classList.remove('hidden');
+        }
+        window.openTodoModal = openTodoModal;
+
+        function closeTodoModal() {
+            document.getElementById('todoModal').classList.add('hidden');
+        }
+        window.closeTodoModal = closeTodoModal;
+
+        function openNotifModal() {
+            const container = document.getElementById('notifListContainer');
+            container.innerHTML = '';
+            const notifs = window.activeNotifications || [];
+
+            if (notifs.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen actieve herinneringen op dit moment. 👍</div>`;
+            } else {
+                notifs.forEach(n => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3 bg-amber-50 border border-amber-200 rounded-md cursor-pointer hover:bg-amber-100 transition';
+                    item.onclick = () => {
+                        closeNotifModal();
+                        openDetailModal(n.projectId);
+                    };
+                    item.innerHTML = `
+                        <div class="font-bold text-xs text-amber-900">${n.title}</div>
+                        <div class="text-xs text-amber-800 mt-1">${n.msg}</div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+            document.getElementById('notifModal').classList.remove('hidden');
+        }
+        window.openNotifModal = openNotifModal;
+
+        function closeNotifModal() {
+            document.getElementById('notifModal').classList.add('hidden');
+        }
+        window.closeNotifModal = closeNotifModal;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+        window.toggleSidebar = toggleSidebar;
+    </script>
+
     <!-- APPLICATION & FIREBASE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -339,7 +404,6 @@
 
         window.currentDate = new Date();
         window.projects = [];
-        let materialFilter = 'all';
 
         const dbRef = ref(db);
         get(child(dbRef, 'projects')).then((snapshot) => {
@@ -404,14 +468,6 @@
     </script>
 
     <script>
-        let currentModalProjectId = null;
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
-        }
-        window.toggleSidebar = toggleSidebar;
-
         function renderPrioritySidebar() {
             const container = document.getElementById('priorityList');
             container.innerHTML = '';
@@ -558,7 +614,8 @@
 
                     if (startCol < endCol) {
                         const bar = document.createElement('div');
-                        bar.className = 'pointer-events-auto h-6 rounded-md text-white text-xs px-2 flex items-center justify-between shadow-sm cursor-pointer hover:brightness-110 transition truncate font-medium';
+                        // rounded-sm voor subtiele/minder ronde hoekjes in de agenda
+                        bar.className = 'pointer-events-auto h-6 rounded-sm text-white text-xs px-2 flex items-center justify-between shadow-sm cursor-pointer hover:brightness-110 transition truncate font-medium';
                         
                         const leftPercent = ((startCol - 1) / 7) * 100;
                         const widthPercent = ((endCol - startCol) / 7) * 100;
@@ -588,7 +645,7 @@
             div.className = 'flex items-center space-x-2 material-row';
             div.innerHTML = `
                 <input type="checkbox" ${bought ? 'checked' : ''} class="mat-bought rounded text-amber-500">
-                <input type="text" value="${name}" placeholder="Bijv. Tegelkit 2x" class="mat-name flex-1 border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-amber-500">
+                <input type="text" value="${name}" placeholder="Bijv. Tegelkit 2x" class="mat-name flex-1 border border-slate-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-amber-500">
                 <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 font-bold px-1">&times;</button>
             `;
             container.appendChild(div);
@@ -601,7 +658,7 @@
             div.className = 'flex items-center space-x-2 todo-row';
             div.innerHTML = `
                 <input type="checkbox" ${done ? 'checked' : ''} class="todo-done rounded text-emerald-600">
-                <input type="text" value="${name}" placeholder="Bijv. Leverancier bellen" class="todo-name flex-1 border border-slate-300 rounded p-1.5 text-xs focus:ring-1 focus:ring-emerald-500">
+                <input type="text" value="${name}" placeholder="Bijv. Leverancier bellen" class="todo-name flex-1 border border-slate-300 rounded-md p-1.5 text-xs focus:ring-1 focus:ring-emerald-500">
                 <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 font-bold px-1">&times;</button>
             `;
             container.appendChild(div);
@@ -812,18 +869,6 @@
             }
         }
 
-        // Gecorrigeerde functies voor de Boodschappenlijst modal
-        function openShoppingModal() {
-            renderShoppingList();
-            document.getElementById('shoppingModal').classList.remove('hidden');
-        }
-        window.openShoppingModal = openShoppingModal;
-
-        function closeShoppingModal() {
-            document.getElementById('shoppingModal').classList.add('hidden');
-        }
-        window.closeShoppingModal = closeShoppingModal;
-
         function setMaterialFilter(filter) {
             materialFilter = filter;
             document.getElementById('filterAllBtn').className = filter === 'all' ? 'px-3 py-1 text-xs font-bold rounded-md bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-md bg-slate-200 text-slate-700';
@@ -834,6 +879,7 @@
 
         function renderShoppingList() {
             const container = document.getElementById('shoppingListContainer');
+            if (!container) return;
             container.innerHTML = '';
 
             let hasItems = false;
@@ -874,6 +920,7 @@
                 container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen materialen gevonden in deze weergave.</div>`;
             }
         }
+        window.renderShoppingList = renderShoppingList;
 
         function renderTodoPreview() {
             const allTodos = [];
@@ -903,19 +950,9 @@
             }
         }
 
-        function openTodoModal() {
-            renderTodoList();
-            document.getElementById('todoModal').classList.remove('hidden');
-        }
-        window.openTodoModal = openTodoModal;
-
-        function closeTodoModal() {
-            document.getElementById('todoModal').classList.add('hidden');
-        }
-        window.closeTodoModal = closeTodoModal;
-
         function renderTodoList() {
             const container = document.getElementById('todoListContainer');
+            if (!container) return;
             container.innerHTML = '';
 
             let hasItems = false;
@@ -950,6 +987,7 @@
                 container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen project to-do's aanwezig.</div>`;
             }
         }
+        window.renderTodoList = renderTodoList;
 
         function checkNotifications() {
             const notifications = [];
@@ -975,39 +1013,6 @@
 
             window.activeNotifications = notifications;
         }
-
-        function openNotifModal() {
-            const container = document.getElementById('notifListContainer');
-            container.innerHTML = '';
-
-            const notifs = window.activeNotifications || [];
-
-            if (notifs.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen actieve herinneringen op dit moment. 👍</div>`;
-            } else {
-                notifs.forEach(n => {
-                    const item = document.createElement('div');
-                    item.className = 'p-3 bg-amber-50 border border-amber-200 rounded-md cursor-pointer hover:bg-amber-100 transition';
-                    item.onclick = () => {
-                        closeNotifModal();
-                        openDetailModal(n.projectId);
-                    };
-                    item.innerHTML = `
-                        <div class="font-bold text-xs text-amber-900">${n.title}</div>
-                        <div class="text-xs text-amber-800 mt-1">${n.msg}</div>
-                    `;
-                    container.appendChild(item);
-                });
-            }
-
-            document.getElementById('notifModal').classList.remove('hidden');
-        }
-        window.openNotifModal = openNotifModal;
-
-        function closeNotifModal() {
-            document.getElementById('notifModal').classList.add('hidden');
-        }
-        window.closeNotifModal = closeNotifModal;
     </script>
 </body>
 </html>
