@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Project & Sport Kalender</title>
+    
+    <!-- PWA Meta tags -->
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Projecten">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/calendar--v1.png">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col no-select">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">📅</span>
+                <div>
+                    <h1 class="font-bold text-lg leading-none">Projecten Dashboard</h1>
+                    <span class="text-xs text-slate-400">Maandoverzicht & Planning</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Shopping list btn -->
+                <button onclick="openShoppingModal()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition" title="Boodschappenlijst">
+                    <span class="text-lg">🛒</span>
+                    <span id="shoppingBadge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </button>
+
+                <!-- Notifications btn -->
+                <button onclick="openNotifModal()" class="relative p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-200 transition" title="Notificaties">
+                    <span class="text-lg">🔔</span>
+                    <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-rose-500 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                </button>
+
+                <button onclick="openProjectModal()" class="bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold px-3 py-2 rounded-lg flex items-center space-x-1 shadow transition">
+                    <span class="text-base">+</span>
+                    <span class="hidden sm:inline">Nieuw Project</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col gap-4">
+        
+        <!-- CALENDAR HEADER / MONTH SWITCHER -->
+        <div class="bg-white rounded-xl shadow-sm p-3 sm:p-4 flex items-center justify-between">
+            <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 font-bold">&lt; Vorige</button>
+            <h2 id="currentMonthYear" class="text-lg sm:text-xl font-bold text-slate-800 capitalize"></h2>
+            <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-600 font-bold">Volgende &gt;</button>
+        </div>
+
+        <!-- CALENDAR GRID CONTAINER -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <!-- Days of Week Header -->
+            <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200 text-center font-semibold text-xs sm:text-sm text-slate-500 py-2">
+                <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
+            </div>
+
+            <!-- Calendar Days Container -->
+            <div id="calendarGrid" class="flex-1 flex flex-col min-h-[450px]">
+                <!-- Dynamic grid generated via JavaScript -->
+            </div>
+        </div>
+
+        <!-- LOWER SECTION: WIDGETS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <!-- MATERIALS WIDGET PREVIEW -->
+            <div onclick="openShoppingModal()" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 cursor-pointer hover:border-amber-300 transition">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl">🛒</span>
+                        <h3 class="font-bold text-slate-800">Boodschappenlijst</h3>
+                    </div>
+                    <span id="materialsCountTag" class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">0 items</span>
+                </div>
+                <div id="materialsPreview" class="text-sm text-slate-500 min-h-[50px] flex items-center">
+                    Laden van materialen...
+                </div>
+            </div>
+
+            <!-- SPORT TO-DO PREVIEW WIDGET -->
+            <div onclick="openSportModal()" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 cursor-pointer hover:border-emerald-300 transition">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xl">🏃</span>
+                        <h3 class="font-bold text-slate-800">Sport To-Do List</h3>
+                    </div>
+                    <span id="sportCountTag" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">0 doelen</span>
+                </div>
+                <div id="sportPreview" class="text-sm text-slate-500 min-h-[50px] flex items-center">
+                    Laden van sportdoelen...
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL: ADD / EDIT PROJECT -->
+    <div id="projectModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+                <h3 id="projectModalTitle" class="font-bold text-lg">Nieuw Project Toevoegen</h3>
+                <button onclick="closeProjectModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            
+            <form id="projectForm" onsubmit="saveProject(event)" class="p-6 overflow-y-auto space-y-4">
+                <input type="hidden" id="projectId">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Projectnaam</label>
+                    <input type="text" id="projectName" required placeholder="Bijv. Badkamer verbouwen" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Startdatum</label>
+                        <input type="date" id="startDate" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Einddatum</label>
+                        <input type="date" id="endDate" required class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Projectkleur</label>
+                        <input type="color" id="projectColor" value="#0284c7" class="w-full h-10 border border-slate-300 rounded-lg p-1 cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Prioriteit</label>
+                        <select id="projectPriority" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                            <option value="Laag">🟢 Laag</option>
+                            <option value="Middel" selected>🟡 Middel</option>
+                            <option value="Hoog">🔴 Hoog</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Status</label>
+                    <select id="projectStatus" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        <option value="Afspraak maken">Afspraak maken</option>
+                        <option value="Offerte sturen">Offerte sturen</option>
+                        <option value="Offerte gestuurd">Offerte gestuurd</option>
+                        <option value="Offerte bewerken">Offerte bewerken</option>
+                        <option value="Materiaal bestellen">Materiaal bestellen</option>
+                        <option value="Materiaal ingekocht">Materiaal ingekocht</option>
+                        <option value="In uitvoering">In uitvoering</option>
+                        <option value="Factuur sturen">Factuur sturen</option>
+                        <option value="Factuur gestuurd">Factuur gestuurd</option>
+                        <option value="Gefactureerd (verwerken in boekhouding)">Gefactureerd (verwerken in boekhouding)</option>
+                        <option value="Afgerond">Afgerond</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nog in te kopen materiaal (comma-gescheiden)</label>
+                    <textarea id="projectMaterials" rows="2" placeholder="Bijv. Tegels 10m2, Lijm 2x, Kit" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Notities</label>
+                    <textarea id="projectNotes" rows="2" placeholder="Extra opmerkingen..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex justify-between items-center pt-2">
+                    <button type="button" id="deleteProjectBtn" onclick="deleteProject()" class="text-rose-600 hover:text-rose-800 text-sm font-semibold hidden">Verwijderen</button>
+                    <div class="flex space-x-2 ml-auto">
+                        <button type="button" onclick="closeProjectModal()" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 text-sm font-medium hover:bg-slate-50">Annuleren</button>
+                        <button type="submit" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-sm font-semibold shadow">Opslaan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: PROJECT DETAILS -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col">
+            <div id="detailHeader" class="px-6 py-4 text-white flex justify-between items-start">
+                <div>
+                    <h3 id="detailTitle" class="font-bold text-xl"></h3>
+                    <div id="detailDates" class="text-xs opacity-90 mt-1"></div>
+                </div>
+                <button onclick="closeDetailModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Status</span>
+                    <span id="detailStatus" class="text-xs px-2.5 py-1 rounded-full font-bold bg-slate-100 text-slate-800"></span>
+                </div>
+
+                <div class="flex justify-between items-center border-b pb-3">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Prioriteit</span>
+                    <span id="detailPriority" class="text-xs font-bold"></span>
+                </div>
+
+                <div>
+                    <span class="text-xs font-bold text-slate-500 uppercase block mb-1">In te kopen materiaal</span>
+                    <div id="detailMaterialsList" class="space-y-1 text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <!-- Items dynamically populated -->
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-xs font-bold text-slate-500 uppercase block mb-1">Notities</span>
+                    <p id="detailNotes" class="text-sm text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-200 whitespace-pre-line"></p>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button id="editProjectBtn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg">Bewerken</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BOODSCHAPPENLIJST -->
+    <div id="shoppingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-6 py-4 bg-amber-500 text-slate-950 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🛒</span>
+                    <h3 class="font-bold text-lg">Materialen Boodschappenlijst</h3>
+                </div>
+                <button onclick="closeShoppingModal()" class="text-slate-950 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <div class="flex space-x-2">
+                    <button onclick="setMaterialFilter('all')" id="filterAllBtn" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white">Alles</button>
+                    <button onclick="setMaterialFilter('pending')" id="filterPendingBtn" class="px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700">Nog te kopen</button>
+                </div>
+                <button onclick="clearBoughtMaterials()" class="text-xs text-rose-600 font-semibold hover:underline">Verwijder gekochte van projecten</button>
+            </div>
+
+            <div id="shoppingListContainer" class="p-6 overflow-y-auto space-y-2 flex-1">
+                <!-- Dynamically populated shopping list items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SPORT TO-DO MANAGER -->
+    <div id="sportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-6 py-4 bg-emerald-600 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🏃</span>
+                    <h3 class="font-bold text-lg">Sport To-Do Beheer</h3>
+                </div>
+                <button onclick="closeSportModal()" class="text-white/80 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-b border-slate-200">
+                <form onsubmit="addSportItem(event)" class="flex space-x-2">
+                    <input type="text" id="sportTitleInput" required placeholder="Bijv. 5km Hardlopen" class="flex-1 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="date" id="sportDateInput" class="border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <button type="submit" class="bg-emerald-600 text-white font-bold px-3 py-2 rounded-lg hover:bg-emerald-500 text-sm">+</button>
+                </form>
+            </div>
+
+            <div id="sportListContainer" class="p-4 overflow-y-auto space-y-2 flex-1">
+                <!-- Dynamically populated sport items -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NOTIFICATIES -->
+    <div id="notifModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="px-6 py-4 bg-slate-900 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🔔</span>
+                    <h3 class="font-bold text-lg">Notificaties & Herinneringen</h3>
+                </div>
+                <button onclick="closeNotifModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <div class="p-3 bg-sky-50 border-b border-sky-100 flex items-center justify-between text-xs text-sky-900">
+                <span>Wil je Push-meldingen ontvangen op dit apparaat?</span>
+                <button onclick="requestNotificationPermission()" class="bg-sky-600 text-white font-bold px-2 py-1 rounded hover:bg-sky-700">Inschakelen</button>
+            </div>
+
+            <div id="notifListContainer" class="p-4 overflow-y-auto space-y-2 flex-1">
+                <!-- Dynamic notifications -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // --- APP STATE ---
+        let currentDate = new Date();
+        let projects = JSON.parse(localStorage.getItem('pwa_projects')) || [
+            {
+                id: '1',
+                name: 'Badkamer Verbouwen',
+                startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 2).toISOString().split('T')[0],
+                endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 10).toISOString().split('T')[0],
+                color: '#0284c7',
+                priority: 'Hoog',
+                status: 'In uitvoering',
+                statusUpdatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 dagen geleden
+                materials: [
+                    { name: 'Vloertegels 15m2', bought: false },
+                    { name: 'Sanitair kit', bought: true },
+                    { name: 'Douchekop set', bought: false }
+                ],
+                notes: 'Tegelzetter komt op de 5e.'
+            },
+            {
+                id: '2',
+                name: 'Schuur schilderen',
+                startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 8).toISOString().split('T')[0],
+                endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 16).toISOString().split('T')[0],
+                color: '#16a34a',
+                priority: 'Middel',
+                status: 'Offerte gestuurd',
+                statusUpdatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dagen geleden
+                materials: [
+                    { name: 'Grondverf 2.5L', bought: false },
+                    { name: 'Schuurpapier K120', bought: true }
+                ],
+                notes: 'Kleur: Antraciet.'
+            }
+        ];
+
+        let sportTodos = JSON.parse(localStorage.getItem('pwa_sport_todos')) || [
+            { id: '1', title: '5km Hardlopen in het park', date: new Date().toISOString().split('T')[0], done: false },
+            { id: '2', title: '30 min Krachttraining', date: '', done: true }
+        ];
+
+        let materialFilter = 'all';
+
+        // --- INIT ---
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            renderSportPreview();
+            renderMaterialsPreview();
+            checkNotifications();
+        });
+
+        function saveProjectsState() {
+            localStorage.setItem('pwa_projects', JSON.stringify(projects));
+            renderCalendar();
+            renderMaterialsPreview();
+            checkNotifications();
+        }
+
+        function saveSportState() {
+            localStorage.setItem('pwa_sport_todos', JSON.stringify(sportTodos));
+            renderSportPreview();
+            renderSportList();
+        }
+
+        // --- CALENDAR ENGINE ---
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Header date text
+            const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+            document.getElementById('currentMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+            // First day of month & total days
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            
+            let startingDay = firstDayOfMonth.getDay() - 1; // Mon = 0
+            if (startingDay === -1) startingDay = 6; // Sun = 6
+
+            const totalDays = lastDayOfMonth.getDate();
+
+            // Weeks grid builder
+            let currentDayCount = 1;
+            let prevMonthLastDay = new Date(year, month, 0).getDate();
+
+            // Calculate total weeks needed
+            const totalCells = startingDay + totalDays;
+            const totalWeeks = Math.ceil(totalCells / 7);
+
+            for (let w = 0; w < totalWeeks; w++) {
+                // Create week row container
+                const weekRow = document.createElement('div');
+                weekRow.className = 'grid grid-cols-7 border-b border-slate-200 min-h-[90px] relative flex-1';
+
+                // Calculate week date range
+                const weekStartDate = new Date(year, month, (w * 7) - startingDay + 1);
+                const weekEndDate = new Date(year, month, (w * 7) - startingDay + 7);
+
+                // Render 7 Day Background Cells
+                for (let d = 0; d < 7; d++) {
+                    const cellIndex = w * 7 + d;
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'border-r border-slate-100 p-1 flex flex-col justify-between relative';
+
+                    let cellDayNum = 0;
+                    let isCurrentMonth = false;
+
+                    if (cellIndex < startingDay) {
+                        cellDayNum = prevMonthLastDay - (startingDay - cellIndex - 1);
+                        dayCell.classList.add('bg-slate-50/50', 'text-slate-300');
+                    } else if (currentDayCount <= totalDays) {
+                        cellDayNum = currentDayCount;
+                        isCurrentMonth = true;
+
+                        // Check today
+                        const today = new Date();
+                        if (today.getDate() === cellDayNum && today.getMonth() === month && today.getFullYear() === year) {
+                            dayCell.classList.add('bg-sky-50/60');
+                        }
+                        currentDayCount++;
+                    } else {
+                        cellDayNum = cellIndex - startingDay - totalDays + 1;
+                        dayCell.classList.add('bg-slate-50/50', 'text-slate-300');
+                    }
+
+                    dayCell.innerHTML = `<span class="text-xs font-bold p-1 ${isCurrentMonth ? 'text-slate-700' : ''}">${cellDayNum}</span>`;
+                    weekRow.appendChild(dayCell);
+                }
+
+                // Render Project Overlay Bars for this Week
+                const overlayContainer = document.createElement('div');
+                overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
+
+                // Find projects visible in this week
+                const weekProjects = projects.filter(p => {
+                    const pStart = new Date(p.startDate);
+                    const pEnd = new Date(p.endDate);
+                    pStart.setHours(0,0,0,0);
+                    pEnd.setHours(23,59,59,999);
+                    return pStart <= weekEndDate && pEnd >= weekStartDate;
+                });
+
+                weekProjects.forEach(p => {
+                    const pStart = new Date(p.startDate);
+                    const pEnd = new Date(p.endDate);
+                    pStart.setHours(0,0,0,0);
+                    pEnd.setHours(23,59,59,999);
+
+                    // Compute col start (1-8) and col end (1-8)
+                    let startCol = 1;
+                    let endCol = 8;
+
+                    for (let d = 0; d < 7; d++) {
+                        const curDay = new Date(weekStartDate);
+                        curDay.setDate(curDay.getDate() + d);
+                        curDay.setHours(0,0,0,0);
+
+                        if (curDay < pStart) startCol = d + 2;
+                        if (curDay <= pEnd) endCol = d + 2;
+                    }
+
+                    if (startCol < endCol) {
+                        const bar = document.createElement('div');
+                        bar.className = 'pointer-events-auto h-6 rounded-md text-white text-xs px-2 flex items-center justify-between shadow-sm cursor-pointer hover:brightness-110 transition truncate font-medium';
+                        
+                        // Calculate grid position styling
+                        const leftPercent = ((startCol - 1) / 7) * 100;
+                        const widthPercent = ((endCol - startCol) / 7) * 100;
+
+                        bar.style.marginLeft = `${leftPercent}%`;
+                        bar.style.width = `${widthPercent}%`;
+                        bar.style.backgroundColor = p.color || '#0284c7';
+
+                        bar.innerHTML = `<span class="truncate">${p.name}</span>`;
+                        bar.onclick = (e) => {
+                            e.stopPropagation();
+                            openDetailModal(p.id);
+                        };
+
+                        overlayContainer.appendChild(bar);
+                    }
+                });
+
+                weekRow.appendChild(overlayContainer);
+                grid.appendChild(weekRow);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        // --- PROJECT MODAL & CRUD ---
+        function openProjectModal(id = null) {
+            const form = document.getElementById('projectForm');
+            form.reset();
+            
+            if (id) {
+                const p = projects.find(x => x.id === id);
+                document.getElementById('projectId').value = p.id;
+                document.getElementById('projectName').value = p.name;
+                document.getElementById('startDate').value = p.startDate;
+                document.getElementById('endDate').value = p.endDate;
+                document.getElementById('projectColor').value = p.color || '#0284c7';
+                document.getElementById('projectPriority').value = p.priority;
+                document.getElementById('projectStatus').value = p.status;
+                document.getElementById('projectMaterials').value = p.materials ? p.materials.map(m => m.name).join(', ') : '';
+                document.getElementById('projectNotes').value = p.notes || '';
+                
+                document.getElementById('projectModalTitle').innerText = 'Project Bewerken';
+                document.getElementById('deleteProjectBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('projectId').value = '';
+                document.getElementById('projectColor').value = '#0284c7';
+                document.getElementById('projectModalTitle').innerText = 'Nieuw Project Toevoegen';
+                document.getElementById('deleteProjectBtn').classList.add('hidden');
+            }
+
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+        }
+
+        function saveProject(e) {
+            e.preventDefault();
+            const id = document.getElementById('projectId').value;
+            const name = document.getElementById('projectName').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const color = document.getElementById('projectColor').value;
+            const priority = document.getElementById('projectPriority').value;
+            const status = document.getElementById('projectStatus').value;
+            const rawMaterials = document.getElementById('projectMaterials').value;
+            const notes = document.getElementById('projectNotes').value;
+
+            let existingMaterials = [];
+            if (id) {
+                const old = projects.find(x => x.id === id);
+                if (old && old.materials) existingMaterials = old.materials;
+            }
+
+            // Parse materials preserving 'bought' status if existing
+            const materialsList = rawMaterials.split(',').map(m => m.trim()).filter(m => m.length > 0).map(mName => {
+                const found = existingMaterials.find(em => em.name.toLowerCase() === mName.toLowerCase());
+                return { name: mName, bought: found ? found.bought : false };
+            });
+
+            if (id) {
+                // Update
+                const index = projects.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    const statusChanged = projects[index].status !== status;
+                    projects[index] = {
+                        ...projects[index],
+                        name, startDate, endDate, color, priority, status,
+                        statusUpdatedAt: statusChanged ? new Date().toISOString() : projects[index].statusUpdatedAt,
+                        materials: materialsList,
+                        notes
+                    };
+                }
+            } else {
+                // New
+                projects.push({
+                    id: Date.now().toString(),
+                    name, startDate, endDate, color, priority, status,
+                    statusUpdatedAt: new Date().toISOString(),
+                    materials: materialsList,
+                    notes
+                });
+            }
+
+            saveProjectsState();
+            closeProjectModal();
+        }
+
+        function deleteProject() {
+            const id = document.getElementById('projectId').value;
+            if (id && confirm('Weet je zeker dat je dit project wilt verwijderen?')) {
+                projects = projects.filter(p => p.id !== id);
+                saveProjectsState();
+                closeProjectModal();
+                closeDetailModal();
+            }
+        }
+
+        // --- DETAIL MODAL ---
+        function openDetailModal(id) {
+            const p = projects.find(x => x.id === id);
+            if (!p) return;
+
+            document.getElementById('detailHeader').style.backgroundColor = p.color || '#0284c7';
+            document.getElementById('detailTitle').innerText = p.name;
+            document.getElementById('detailDates').innerText = `🗓️ ${p.startDate} t/m ${p.endDate}`;
+            
+            document.getElementById('detailStatus').innerText = p.status;
+            document.getElementById('detailPriority').innerText = `${p.priority === 'Hoog' ? '🔴' : p.priority === 'Middel' ? '🟡' : '🟢'} ${p.priority}`;
+
+            const matContainer = document.getElementById('detailMaterialsList');
+            if (p.materials && p.materials.length > 0) {
+                matContainer.innerHTML = p.materials.map((m, idx) => `
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}', ${idx})" class="rounded text-sky-600">
+                        <span class="${m.bought ? 'line-through text-slate-400' : 'text-slate-700'}">${m.name}</span>
+                    </div>
+                `).join('');
+            } else {
+                matContainer.innerHTML = `<span class="text-slate-400 italic">Geen materialen opgegeven.</span>`;
+            }
+
+            document.getElementById('detailNotes').innerText = p.notes || 'Geen notities.';
+            document.getElementById('editProjectBtn').onclick = () => {
+                closeDetailModal();
+                openProjectModal(p.id);
+            };
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function toggleMaterialStatus(projectId, index) {
+            const p = projects.find(x => x.id === projectId);
+            if (p && p.materials && p.materials[index]) {
+                p.materials[index].bought = !p.materials[index].bought;
+                saveProjectsState();
+                openDetailModal(projectId); // Refresh view
+            }
+        }
+
+        // --- MATERIALS / SHOPPING LIST ---
+        function renderMaterialsPreview() {
+            const allMaterials = [];
+            projects.forEach(p => {
+                if (p.materials) {
+                    p.materials.forEach(m => allMaterials.push({ ...m, projectName: p.name, projectColor: p.color }));
+                }
+            });
+
+            const pending = allMaterials.filter(m => !m.bought);
+            document.getElementById('shoppingBadge').innerText = pending.length;
+            document.getElementById('shoppingBadge').classList.toggle('hidden', pending.length === 0);
+            document.getElementById('materialsCountTag').innerText = `${pending.length} te kopen`;
+
+            const preview = document.getElementById('materialsPreview');
+            if (allMaterials.length === 0) {
+                preview.innerHTML = `<span class="text-slate-400 italic">Geen materialen in projecten.</span>`;
+            } else if (pending.length === 0) {
+                preview.innerHTML = `<span class="text-emerald-600 font-medium">✓ Alle materialen zijn gekocht!</span>`;
+            } else {
+                preview.innerHTML = `<div class="space-y-1 w-full">
+                    ${pending.slice(0, 3).map(m => `
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-slate-700 font-medium truncate">• ${m.name}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] text-white" style="background-color:${m.projectColor}">${m.projectName}</span>
+                        </div>
+                    `).join('')}
+                    ${pending.length > 3 ? `<span class="text-[11px] text-slate-400 block pt-1">+ nog ${pending.length - 3} andere items...</span>` : ''}
+                </div>`;
+            }
+        }
+
+        function openShoppingModal() {
+            renderShoppingList();
+            document.getElementById('shoppingModal').classList.remove('hidden');
+        }
+
+        function closeShoppingModal() {
+            document.getElementById('shoppingModal').classList.add('hidden');
+        }
+
+        function setMaterialFilter(filter) {
+            materialFilter = filter;
+            document.getElementById('filterAllBtn').className = filter === 'all' ? 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700';
+            document.getElementById('filterPendingBtn').className = filter === 'pending' ? 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-800 text-white' : 'px-3 py-1 text-xs font-bold rounded-lg bg-slate-200 text-slate-700';
+            renderShoppingList();
+        }
+
+        function renderShoppingList() {
+            const container = document.getElementById('shoppingListContainer');
+            container.innerHTML = '';
+
+            let hasItems = false;
+
+            projects.forEach(p => {
+                if (!p.materials || p.materials.length === 0) return;
+
+                const filtered = p.materials.filter(m => materialFilter === 'all' || !m.bought);
+                if (filtered.length === 0) return;
+
+                hasItems = true;
+
+                const group = document.createElement('div');
+                group.className = 'mb-4 border border-slate-200 rounded-lg p-3 bg-slate-50';
+                group.innerHTML = `
+                    <div class="flex items-center justify-between border-b pb-2 mb-2">
+                        <span class="font-bold text-xs uppercase px-2 py-0.5 rounded text-white" style="background-color:${p.color}">${p.name}</span>
+                    </div>
+                    <div class="space-y-2">
+                        ${filtered.map((m, idx) => {
+                            const originalIdx = p.materials.findIndex(x => x.name === m.name);
+                            return `
+                                <label class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}',${originalIdx})" class="rounded text-amber-500">
+                                        <span class="text-sm ${m.bought ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${m.name}</span>
+                                    </div>
+                                    <span class="text-xs ${m.bought ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}">${m.bought ? 'Gekocht' : 'Nog te kopen'}</span>
+                                </label>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(group);
+            });
+
+            if (!hasItems) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen materialen gevonden in deze weergave.</div>`;
+            }
+        }
+
+        function clearBoughtMaterials() {
+            if (confirm('Weet je zeker dat je alle reeds gekochte materialen definitief uit de projecten wilt verwijderen?')) {
+                projects.forEach(p => {
+                    if (p.materials) {
+                        p.materials = p.materials.filter(m => !m.bought);
+                    }
+                });
+                saveProjectsState();
+                renderShoppingList();
+            }
+        }
+
+        // --- SPORT TO-DO MANAGER ---
+        function renderSportPreview() {
+            const pending = sportTodos.filter(t => !t.done);
+            document.getElementById('sportCountTag').innerText = `${pending.length} doelen`;
+
+            const preview = document.getElementById('sportPreview');
+            if (sportTodos.length === 0) {
+                preview.innerHTML = `<span class="text-slate-400 italic">Geen sport doelen. Klik om toe te voegen!</span>`;
+            } else {
+                preview.innerHTML = `<div class="space-y-1 w-full">
+                    ${sportTodos.slice(0, 3).map(t => `
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="${t.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${t.done ? '✓' : '⚪'} ${t.title}</span>${t.date ? `<span class="text-slate-400 text-[10px]">${t.date}</span>` : ''}
+                        </div>
+                    `).join('')}
+                </div>`;
+            }
+        }
+
+        function openSportModal() {
+            renderSportList();
+            document.getElementById('sportModal').classList.remove('hidden');
+        }
+
+        function closeSportModal() {
+            document.getElementById('sportModal').classList.add('hidden');
+        }
+
+        function renderSportList() {
+            const container = document.getElementById('sportListContainer');
+            container.innerHTML = '';
+
+            if (sportTodos.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">Nog geen sport doelen toegevoegd.</div>`;
+                return;
+            }
+
+            sportTodos.forEach((t, idx) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg';
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2 flex-1 mr-2">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleSportTodo(${idx})" class="rounded text-emerald-600">
+                        <div class="flex flex-col">
+                            <span class="text-sm ${t.done ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${t.title}</span>
+                            ${t.date ? `<span class="text-[10px] text-slate-400">📅 ${t.date}</span>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="deleteSportTodo(${idx})" class="text-rose-500 hover:text-rose-700 text-sm font-bold">&times;</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addSportItem(e) {
+            e.preventDefault();
+            const title = document.getElementById('sportTitleInput').value;
+            const date = document.getElementById('sportDateInput').value;
+
+            sportTodos.push({ id: Date.now().toString(), title, date, done: false });
+            saveSportState();
+
+            document.getElementById('sportTitleInput').value = '';
+            document.getElementById('sportDateInput').value = '';
+        }
+
+        function toggleSportTodo(idx) {
+            sportTodos[idx].done = !sportTodos[idx].done;
+            saveSportState();
+        }
+
+        function deleteSportTodo(idx) {
+            sportTodos.splice(idx, 1);
+            saveSportState();
+        }
+
+        // --- NOTIFICATIONS & ALERTS SYSTEM ---
+        function checkNotifications() {
+            const notifications = [];
+            const now = new Date();
+
+            projects.forEach(p => {
+                // 1. Check if status hasn't been updated for > 5 days
+                if (p.statusUpdatedAt) {
+                    const lastUpdate = new Date(p.statusUpdatedAt);
+                    const diffDays = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
+                    if (diffDays >= 5 && p.status !== 'Afgerond') {
+                        notifications.push({
+                            type: 'status_stale',
+                            title: `Status Update Herinnering: ${p.name}`,
+                            msg: `De status staat al ${diffDays} dagen op "${p.status}". Is er al voortgang?`,
+                            projectId: p.id
+                        });
+                    }
+                }
+
+                // 2. Check if project starts in <= 7 days and has unbought materials
+                const startDate = new Date(p.startDate);
+                const daysToStart = Math.ceil((startDate - now) / (1000 * 60 * 60 * 24));
+                const unbought = p.materials ? p.materials.filter(m => !m.bought) : [];
+
+                if (daysToStart >= 0 && daysToStart <= 7 && unbought.length > 0) {
+                    notifications.push({
+                        type: 'material_check',
+                        title: `Materiaal Check: ${p.name}`,
+                        msg: `Project begint over ${daysToStart} dag(en), maar er staan nog ${unbought.length} materialen open op de lijst!`,
+                        projectId: p.id
+                    });
+                }
+            });
+
+            // Update Notification Badge
+            const badge = document.getElementById('notifBadge');
+            badge.innerText = notifications.length;
+            badge.classList.toggle('hidden', notifications.length === 0);
+
+            // Store in DOM for modal
+            window.activeNotifications = notifications;
+        }
+
+        function openNotifModal() {
+            const container = document.getElementById('notifListContainer');
+            container.innerHTML = '';
+
+            const notifs = window.activeNotifications || [];
+
+            if (notifs.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen actieve herinneringen op dit moment. 👍</div>`;
+            } else {
+                notifs.forEach(n => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3 bg-amber-50 border border-amber-200 rounded-lg cursor-pointer hover:bg-amber-100 transition';
+                    item.onclick = () => {
+                        closeNotifModal();
+                        openDetailModal(n.projectId);
+                    };
+                    item.innerHTML = `
+                        <div class="font-bold text-xs text-amber-900">${n.title}</div>
+                        <div class="text-xs text-amber-800 mt-1">${n.msg}</div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            document.getElementById('notifModal').classList.remove('hidden');
+        }
+
+        function closeNotifModal() {
+            document.getElementById('notifModal').classList.add('hidden');
+        }
+
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        alert("Push-notificaties zijn succesvol ingeschakeld!");
+                    } else {
+                        alert("Notificatie toestemming werd geweigerd.");
+                    }
+                });
+            } else {
+                alert("Je browser ondersteunt helaas geen Push-notificaties.");
+            }
+        }
+    </script>
+</body>
+</html>
