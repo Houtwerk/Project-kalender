@@ -109,33 +109,33 @@
                 <div id="calendarGrid" class="flex-1 flex flex-col min-h-[450px]"></div>
             </div>
 
-            <!-- LOWER SECTION: WIDGETS -->
+            <!-- LOWER SECTION: WIDGETS (SCROLLBAAR) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 <!-- MATERIALS WIDGET PREVIEW -->
-                <div onclick="openShoppingModal()" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 cursor-pointer hover:border-amber-300 transition">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-48">
+                    <div onclick="openShoppingModal()" class="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition">
                         <div class="flex items-center space-x-2">
                             <span class="text-xl">🛒</span>
                             <h3 class="font-bold text-slate-800">Boodschappenlijst</h3>
                         </div>
                         <span id="materialsCountTag" class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-medium">0 items</span>
                     </div>
-                    <div id="materialsPreview" class="text-sm text-slate-500 min-h-[50px] flex items-center">
+                    <div id="materialsPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">
                         Laden van materialen...
                     </div>
                 </div>
 
                 <!-- CENTRALE TO-DO PREVIEW WIDGET -->
-                <div onclick="openTodoModal()" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 cursor-pointer hover:border-emerald-300 transition">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col h-48">
+                    <div onclick="openTodoModal()" class="flex items-center justify-between mb-2 cursor-pointer hover:opacity-80 transition">
                         <div class="flex items-center space-x-2">
                             <span class="text-xl">✅</span>
                             <h3 class="font-bold text-slate-800">To-Do List</h3>
                         </div>
                         <span id="todoCountTag" class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">0 taken</span>
                     </div>
-                    <div id="todoPreview" class="text-sm text-slate-500 min-h-[50px] flex items-center">
+                    <div id="todoPreview" class="text-sm text-slate-500 flex-1 overflow-y-auto custom-scrollbar pr-1">
                         Laden van taken...
                     </div>
                 </div>
@@ -393,10 +393,8 @@
                 return;
             }
 
-            // Priority order mapping
             const priorityWeight = { 'Hoog': 1, 'Middel': 2, 'Laag': 3 };
 
-            // Sort projects by priority
             const sortedProjects = [...projects].sort((a, b) => {
                 const weightA = priorityWeight[a.priority] || 2;
                 const weightB = priorityWeight[b.priority] || 2;
@@ -770,14 +768,13 @@
             } else if (pending.length === 0) {
                 preview.innerHTML = `<span class="text-emerald-600 font-medium">✓ Alle materialen zijn gekocht!</span>`;
             } else {
-                preview.innerHTML = `<div class="space-y-1 w-full">
-                    ${pending.slice(0, 3).map(m => `
-                        <div class="flex items-center justify-between text-xs">
+                preview.innerHTML = `<div class="space-y-1.5 w-full">
+                    ${pending.map(m => `
+                        <div class="flex items-center justify-between text-xs bg-slate-50 p-1.5 rounded border border-slate-100">
                             <span class="text-slate-700 font-medium truncate">• ${m.name}</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] text-white" style="background-color:${m.projectColor}">${m.projectName}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] text-white font-medium" style="background-color:${m.projectColor}">${m.projectName}</span>
                         </div>
                     `).join('')}
-                    ${pending.length > 3 ? `<span class="text-[11px] text-slate-400 block pt-1">+ nog ${pending.length - 3} andere items...</span>` : ''}
                 </div>`;
             }
         }
@@ -859,14 +856,13 @@
             } else if (pending.length === 0) {
                 preview.innerHTML = `<span class="text-emerald-600 font-medium">✓ Alle taken zijn afgerond!</span>`;
             } else {
-                preview.innerHTML = `<div class="space-y-1 w-full">
-                    ${pending.slice(0, 3).map(t => `
-                        <div class="flex items-center justify-between text-xs">
+                preview.innerHTML = `<div class="space-y-1.5 w-full">
+                    ${pending.map(t => `
+                        <div class="flex items-center justify-between text-xs bg-slate-50 p-1.5 rounded border border-slate-100">
                             <span class="text-slate-700 font-medium truncate">• ${t.name}</span>
-                            <span class="px-1.5 py-0.5 rounded text-[10px] text-white" style="background-color:${t.projectColor}">${t.projectName}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] text-white font-medium" style="background-color:${t.projectColor}">${t.projectName}</span>
                         </div>
                     `).join('')}
-                    ${pending.length > 3 ? `<span class="text-[11px] text-slate-400 block pt-1">+ nog ${pending.length - 3} andere taken...</span>` : ''}
                 </div>`;
             }
         }
