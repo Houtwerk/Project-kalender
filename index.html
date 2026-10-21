@@ -148,11 +148,10 @@
                     <input type="text" id="projectName" required placeholder="Bijv. Vakantiehuisje Klus" class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                 </div>
 
-                <!-- MEERDERE DATUMBRIEVEN / BLOKKEN (MAX 3) -->
+                <!-- MEERDERE DATUMBLOKKEN (MAX 3) -->
                 <div class="border border-slate-200 p-3 rounded-md bg-slate-50 space-y-3">
                     <label class="block text-xs font-bold text-slate-600 uppercase">Project Datumblokken (1 t/m 3)</label>
                     
-                    <!-- Blok 1 -->
                     <div class="grid grid-cols-2 gap-2 p-2 bg-white rounded border border-slate-200">
                         <div>
                             <span class="text-[10px] font-bold text-slate-500 block">Blok 1 Start</span>
@@ -164,7 +163,6 @@
                         </div>
                     </div>
 
-                    <!-- Blok 2 (Optioneel) -->
                     <div class="grid grid-cols-2 gap-2 p-2 bg-white rounded border border-slate-200">
                         <div>
                             <span class="text-[10px] font-bold text-slate-500 block">Blok 2 Start (optioneel)</span>
@@ -176,7 +174,6 @@
                         </div>
                     </div>
 
-                    <!-- Blok 3 (Optioneel) -->
                     <div class="grid grid-cols-2 gap-2 p-2 bg-white rounded border border-slate-200">
                         <div>
                             <span class="text-[10px] font-bold text-slate-500 block">Blok 3 Start (optioneel)</span>
@@ -349,6 +346,7 @@
         </div>
     </div>
 
+    <!-- ALLE UI EN RENDERING FUNCTIES (HIER GEPLAATST ZODAT ZE ALTIJD BESCHIKBAAR ZIJN) -->
     <script>
         let currentModalProjectId = null;
         let materialFilter = 'all';
@@ -411,106 +409,10 @@
             sidebar.classList.toggle('-translate-x-full');
         }
         window.toggleSidebar = toggleSidebar;
-    </script>
 
-    <!-- APPLICATION & FIREBASE SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyABGGFzDqh76OwDWzkbqX7tbY1ndkkZ8Ng",
-            authDomain: "houtwerk-schiermonnikoog.firebaseapp.com",
-            projectId: "houtwerk-schiermonnikoog",
-            storageBucket: "houtwerk-schiermonnikoog.firebasestorage.app",
-            messagingSenderId: "336400406245",
-            appId: "1:336400406245:web:0fabdddc1ef0449fd7660c",
-            databaseURL: "https://houtwerk-schiermonnikoog-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        window.currentDate = new Date();
-        window.projects = [];
-
-        const dbRef = ref(db);
-        get(child(dbRef, 'projects')).then((snapshot) => {
-            if (!snapshot.exists()) {
-                const localData = localStorage.getItem('pwa_projects') || localStorage.getItem('projects');
-                if (localData) {
-                    try {
-                        const parsed = JSON.parse(localData);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            const projectsObj = {};
-                            parsed.forEach(p => {
-                                // Migreer oude enkele datums naar het nieuwe blokken-formaat
-                                if (!p.blocks && p.startDate && p.endDate) {
-                                    p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
-                                }
-                                projectsObj[p.id] = p;
-                            });
-                            set(ref(db, 'projects'), projectsObj);
-                        }
-                    } catch(e) {
-                        console.error("Fout bij importeren", e);
-                    }
-                }
-            }
-        }).catch((error) => {
-            console.error(error);
-        });
-
-        const projectsRef = ref(db, 'projects');
-        onValue(projectsRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                window.projects = Object.values(data).map(p => {
-                    // Achterwaartse compatibiliteit: als p.blocks er niet is, omzetten naar blok 1
-                    if (!p.blocks && p.startDate && p.endDate) {
-                        p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
-                    } else if (!p.blocks) {
-                        p.blocks = [];
-                    }
-                    return p;
-                });
-            } else {
-                window.projects = [];
-            }
-            renderCalendar();
-            renderPrioritySidebar();
-            renderTodoPreview();
-            renderMaterialsPreview();
-            checkNotifications();
-        });
-
-        window.saveProjectsState = function() {
-            const projectsObj = {};
-            window.projects.forEach(p => {
-                projectsObj[p.id] = p;
-            });
-            set(ref(db, 'projects'), projectsObj);
-        }
-
-        window.renderCalendar = renderCalendar;
-        window.renderPrioritySidebar = renderPrioritySidebar;
-        window.renderTodoPreview = renderTodoPreview;
-        window.renderMaterialsPreview = renderMaterialsPreview;
-        window.checkNotifications = checkNotifications;
-
-        window.changeMonth = function(delta) {
-            window.currentDate.setMonth(window.currentDate.getMonth() + delta);
-            renderCalendar();
-        };
-
-        window.addEventListener('DOMContentLoaded', () => {
-            renderCalendar();
-        });
-    </script>
-
-    <script>
         function renderPrioritySidebar() {
             const container = document.getElementById('priorityList');
+            if (!container) return;
             container.innerHTML = '';
 
             if (!window.projects || window.projects.length === 0) {
@@ -519,7 +421,6 @@
             }
 
             const priorityWeight = { 'Hoog': 1, 'Middel': 2, 'Laag': 3 };
-
             const sortedProjects = [...window.projects].sort((a, b) => {
                 const weightA = priorityWeight[a.priority] || 2;
                 const weightB = priorityWeight[b.priority] || 2;
@@ -559,10 +460,10 @@
                         </div>
                     ` : ''}
                 `;
-
                 container.appendChild(card);
             });
         }
+        window.renderPrioritySidebar = renderPrioritySidebar;
 
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
@@ -631,8 +532,6 @@
                 const overlayContainer = document.createElement('div');
                 overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
 
-                // Doorloop alle projecten én al hun losse blokken voor deze week
-                const renderedBars = [];
                 (window.projects || []).forEach(p => {
                     if (!p.blocks || !Array.isArray(p.blocks)) return;
 
@@ -684,9 +583,11 @@
                 grid.appendChild(weekRow);
             }
         }
+        window.renderCalendar = renderCalendar;
 
         function addMaterialRow(name = '', bought = false) {
             const container = document.getElementById('materialsInputsContainer');
+            if (!container) return;
             const div = document.createElement('div');
             div.className = 'flex items-center space-x-2 material-row';
             div.innerHTML = `
@@ -700,6 +601,7 @@
 
         function addTodoRow(name = '', done = false) {
             const container = document.getElementById('todosInputsContainer');
+            if (!container) return;
             const div = document.createElement('div');
             div.className = 'flex items-center space-x-2 todo-row';
             div.innerHTML = `
@@ -717,7 +619,6 @@
             document.getElementById('materialsInputsContainer').innerHTML = '';
             document.getElementById('todosInputsContainer').innerHTML = '';
 
-            // Reset de 3 blok velden
             document.getElementById('startDate1').value = '';
             document.getElementById('endDate1').value = '';
             document.getElementById('startDate2').value = '';
@@ -735,7 +636,6 @@
                 document.getElementById('projectStatus').value = p.status || 'In uitvoering';
                 document.getElementById('projectNotes').value = p.notes || '';
                 
-                // Vul de blokken in
                 if (p.blocks && p.blocks.length > 0) {
                     if (p.blocks[0]) {
                         document.getElementById('startDate1').value = p.blocks[0].startDate || '';
@@ -783,7 +683,6 @@
             const status = document.getElementById('projectStatus').value;
             const notes = document.getElementById('projectNotes').value;
 
-            // Verzamel de ingevulde blokken
             const blocks = [];
             const s1 = document.getElementById('startDate1').value;
             const e1 = document.getElementById('endDate1').value;
@@ -856,7 +755,6 @@
             document.getElementById('detailHeader').style.backgroundColor = p.color || '#0284c7';
             document.getElementById('detailTitle').innerText = p.name;
             
-            // Toon alle datumblokken in de header
             const datesContainer = document.getElementById('detailDates');
             if (p.blocks && p.blocks.length > 0) {
                 datesContainer.innerHTML = p.blocks.map((b, idx) => `<div>🗓️ Blok ${idx + 1}: ${b.startDate} t/m ${b.endDate}</div>`).join('');
@@ -903,7 +801,7 @@
         window.openDetailModal = openDetailModal;
 
         function closeDetailModal() {
-            document.getElementById('detailModal'].classList.add('hidden');
+            document.getElementById('detailModal').classList.add('hidden');
         }
         window.closeDetailModal = closeDetailModal;
 
@@ -936,11 +834,17 @@
             });
 
             const pending = allMaterials.filter(m => !m.bought);
-            document.getElementById('shoppingBadge').innerText = pending.length;
-            document.getElementById('shoppingBadge').classList.toggle('hidden', pending.length === 0);
-            document.getElementById('materialsCountTag').innerText = `${pending.length} te kopen`;
+            const badge = document.getElementById('shoppingBadge');
+            const countTag = document.getElementById('materialsCountTag');
+            if (badge) {
+                badge.innerText = pending.length;
+                badge.classList.toggle('hidden', pending.length === 0);
+            }
+            if (countTag) countTag.innerText = `${pending.length} te kopen`;
 
             const preview = document.getElementById('materialsPreview');
+            if (!preview) return;
+
             if (allMaterials.length === 0) {
                 preview.innerHTML = `<span class="text-slate-400 italic">Geen materialen in projecten.</span>`;
             } else if (pending.length === 0) {
@@ -956,6 +860,7 @@
                 </div>`;
             }
         }
+        window.renderMaterialsPreview = renderMaterialsPreview;
 
         function setMaterialFilter(filter) {
             materialFilter = filter;
@@ -992,7 +897,7 @@
                             return `
                                 <label class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
                                     <div class="flex items-center space-x-2">
-                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}', ${originalIdx})" class="rounded text-amber-500">
+                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}',${originalIdx})" class="rounded text-amber-500">
                                         <span class="text-sm ${m.bought ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${m.name}</span>
                                     </div>
                                     <span class="text-xs ${m.bought ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}">${m.bought ? 'Gekocht' : 'Nog te kopen'}</span>
@@ -1019,9 +924,12 @@
             });
 
             const pending = allTodos.filter(t => !t.done);
-            document.getElementById('todoCountTag').innerText = `${pending.length} openstaand`;
+            const todoTag = document.getElementById('todoCountTag');
+            if (todoTag) todoTag.innerText = `${pending.length} openstaand`;
 
             const preview = document.getElementById('todoPreview');
+            if (!preview) return;
+
             if (allTodos.length === 0) {
                 preview.innerHTML = `<span class="text-slate-400 italic">Geen to-do's aanwezig.</span>`;
             } else if (pending.length === 0) {
@@ -1037,6 +945,7 @@
                 </div>`;
             }
         }
+        window.renderTodoPreview = renderTodoPreview;
 
         function renderTodoList() {
             const container = document.getElementById('todoListContainer');
@@ -1062,7 +971,7 @@
                                 <div class="flex items-center space-x-2">
                                     <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoStatus('${p.id}', ${idx})" class="rounded text-emerald-600">
                                     <span class="text-sm ${t.done ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${t.name}</span>
-                                    </div>
+                                </div>
                                 <span class="text-xs ${t.done ? 'text-emerald-600 font-semibold' : 'text-slate-500'}">${t.done ? 'Afgerond' : 'Open'}</span>
                             </label>
                         `).join('')}
@@ -1096,11 +1005,124 @@
             });
 
             const badge = document.getElementById('notifBadge');
-            badge.innerText = notifications.length;
-            badge.classList.toggle('hidden', notifications.length === 0);
+            if (badge) {
+                badge.innerText = notifications.length;
+                badge.classList.toggle('hidden', notifications.length === 0);
+            }
 
             window.activeNotifications = notifications;
         }
+        window.checkNotifications = checkNotifications;
+    </script>
+
+    <!-- FIREBASE & DATA SYNCHRONISATIE SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABGGFzDqh76OwDWzkbqX7tbY1ndkkZ8Ng",
+            authDomain: "houtwerk-schiermonnikoog.firebaseapp.com",
+            projectId: "houtwerk-schiermonnikoog",
+            storageBucket: "houtwerk-schiermonnikoog.firebasestorage.app",
+            messagingSenderId: "336400406245",
+            appId: "1:336400406245:web:0fabdddc1ef0449fd7660c",
+            databaseURL: "https://houtwerk-schiermonnikoog-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.currentDate = new Date();
+        window.projects = [];
+
+        const dbRef = ref(db);
+        
+        // VEILIGE HERSTEL & LADEN LOGICA
+        get(child(dbRef, 'projects')).then((snapshot) => {
+            let projectsToUse = [];
+
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                projectsToUse = Object.values(data);
+            }
+
+            // Als Firebase leeg is, check direct de browser localStorage als back-up
+            if (projectsToUse.length === 0) {
+                const localData = localStorage.getItem('pwa_projects') || localStorage.getItem('projects');
+                if (localData) {
+                    try {
+                        const parsed = JSON.parse(localData);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            projectsToUse = parsed;
+                            const projectsObj = {};
+                            projectsToUse.forEach(p => {
+                                if (!p.blocks && p.startDate && p.endDate) {
+                                    p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
+                                }
+                                projectsObj[p.id] = p;
+                            });
+                            set(ref(db, 'projects'), projectsObj);
+                        }
+                    } catch(e) {
+                        console.error("Fout bij parsen lokale data", e);
+                    }
+                }
+            }
+
+            window.projects = projectsToUse.map(p => {
+                if (!p.blocks && p.startDate && p.endDate) {
+                    p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
+                } else if (!p.blocks) {
+                    p.blocks = [];
+                }
+                return p;
+            });
+
+            if (typeof renderCalendar === 'function') renderCalendar();
+            if (typeof renderPrioritySidebar === 'function') renderPrioritySidebar();
+            if (typeof renderTodoPreview === 'function') renderTodoPreview();
+            if (typeof renderMaterialsPreview === 'function') renderMaterialsPreview();
+            if (typeof checkNotifications === 'function') checkNotifications();
+        }).catch((error) => {
+            console.error("Firebase leesfout:", error);
+        });
+
+        // Luister live naar verdere wijzigingen
+        const projectsRef = ref(db, 'projects');
+        onValue(projectsRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                window.projects = Object.values(data).map(p => {
+                    if (!p.blocks && p.startDate && p.endDate) {
+                        p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
+                    } else if (!p.blocks) {
+                        p.blocks = [];
+                    }
+                    return p;
+                });
+            } else {
+                window.projects = [];
+            }
+            if (typeof renderCalendar === 'function') renderCalendar();
+            if (typeof renderPrioritySidebar === 'function') renderPrioritySidebar();
+            if (typeof renderTodoPreview === 'function') renderTodoPreview();
+            if (typeof renderMaterialsPreview === 'function') renderMaterialsPreview();
+            if (typeof checkNotifications === 'function') checkNotifications();
+        });
+
+        window.saveProjectsState = function() {
+            const projectsObj = {};
+            window.projects.forEach(p => {
+                projectsObj[p.id] = p;
+            });
+            set(ref(db, 'projects'), projectsObj);
+        }
+
+        window.changeMonth = function(delta) {
+            window.currentDate.setMonth(window.currentDate.getMonth() + delta);
+            if (typeof renderCalendar === 'function') renderCalendar();
+        };
     </script>
 </body>
 </html>
