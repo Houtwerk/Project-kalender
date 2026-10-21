@@ -34,7 +34,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col no-select">
 
-    <!-- HEADER / NAVIGATION (Donkergrijs & strakke afronding) -->
+    <!-- HEADER / NAVIGATION -->
     <header class="bg-slate-800 text-white sticky top-0 z-30 shadow-md">
         <div class="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -145,17 +145,47 @@
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Projectnaam</label>
-                    <input type="text" id="projectName" required placeholder="Bijv. Badkamer verbouwen" class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    <input type="text" id="projectName" required placeholder="Bijv. Vakantiehuisje Klus" class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Startdatum</label>
-                        <input type="date" id="startDate" required class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                <!-- MEERDERE DATUMBRIEVEN / BLOKKEN (MAX 3) -->
+                <div class="border border-slate-200 p-3 rounded-md bg-slate-50 space-y-3">
+                    <label class="block text-xs font-bold text-slate-600 uppercase">Project Datumblokken (1 t/m 3)</label>
+                    
+                    <!-- Blok 1 -->
+                    <div class="grid grid-cols-2 gap-2 p-2 bg-white rounded border border-slate-200">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block">Blok 1 Start</span>
+                            <input type="date" id="startDate1" required class="w-full border border-slate-300 rounded p-1 text-xs">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block">Blok 1 Eind</span>
+                            <input type="date" id="endDate1" required class="w-full border border-slate-300 rounded p-1 text-xs">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Einddatum</label>
-                        <input type="date" id="endDate" required class="w-full border border-slate-300 rounded-md p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+
+                    <!-- Blok 2 (Optioneel) -->
+                    <div class="grid grid-cols-2 gap-2 p-2 bg-white rounded border border-slate-200">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block">Blok 2 Start (optioneel)</span>
+                            <input type="date" id="startDate2" class="w-full border border-slate-300 rounded p-1 text-xs">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block">Blok 2 Eind (optioneel)</span>
+                            <input type="date" id="endDate2" class="w-full border border-slate-300 rounded p-1 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Blok 3 (Optioneel) -->
+                    <div class="grid grid-cols-2 gap-2 p-2 bg-white rounded border border-slate-200">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block">Blok 3 Start (optioneel)</span>
+                            <input type="date" id="startDate3" class="w-full border border-slate-300 rounded p-1 text-xs">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block">Blok 3 Eind (optioneel)</span>
+                            <input type="date" id="endDate3" class="w-full border border-slate-300 rounded p-1 text-xs">
+                        </div>
                     </div>
                 </div>
 
@@ -229,7 +259,7 @@
             <div id="detailHeader" class="px-6 py-4 text-white flex justify-between items-start">
                 <div>
                     <h3 id="detailTitle" class="font-bold text-xl"></h3>
-                    <div id="detailDates" class="text-xs opacity-90 mt-1"></div>
+                    <div id="detailDates" class="text-xs opacity-90 mt-1 space-y-0.5"></div>
                 </div>
                 <button onclick="closeDetailModal()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
@@ -320,7 +350,6 @@
     </div>
 
     <script>
-        // HOOFDFUNCTIES DIRECT BESCHIKBAAR MAKEN VOOR ONCLICK EVENTS
         let currentModalProjectId = null;
         let materialFilter = 'all';
 
@@ -414,13 +443,17 @@
                         const parsed = JSON.parse(localData);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                             const projectsObj = {};
-                            parsed.forEach(p => { projectsObj[p.id] = p; });
-                            set(ref(db, 'projects'), projectsObj).then(() => {
-                                console.log("Oude lokale gegevens succesvol overgezet naar Firebase!");
+                            parsed.forEach(p => {
+                                // Migreer oude enkele datums naar het nieuwe blokken-formaat
+                                if (!p.blocks && p.startDate && p.endDate) {
+                                    p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
+                                }
+                                projectsObj[p.id] = p;
                             });
+                            set(ref(db, 'projects'), projectsObj);
                         }
                     } catch(e) {
-                        console.error("Fout bij importeren lokale data", e);
+                        console.error("Fout bij importeren", e);
                     }
                 }
             }
@@ -432,7 +465,15 @@
         onValue(projectsRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                window.projects = Object.values(data);
+                window.projects = Object.values(data).map(p => {
+                    // Achterwaartse compatibiliteit: als p.blocks er niet is, omzetten naar blok 1
+                    if (!p.blocks && p.startDate && p.endDate) {
+                        p.blocks = [{ startDate: p.startDate, endDate: p.endDate }];
+                    } else if (!p.blocks) {
+                        p.blocks = [];
+                    }
+                    return p;
+                });
             } else {
                 window.projects = [];
             }
@@ -495,6 +536,11 @@
                 const nextTodo = openTodos.length > 0 ? openTodos[0].name : null;
                 const priorityIcon = p.priority === 'Hoog' ? '🔴' : p.priority === 'Middel' ? '🟡' : '🟢';
 
+                let datesText = '';
+                if (p.blocks && p.blocks.length > 0) {
+                    datesText = p.blocks.map(b => `${b.startDate.slice(5)} t/m ${b.endDate.slice(5)}`).join(' | ');
+                }
+
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-sm text-slate-800 truncate">${p.name}</span>
@@ -503,7 +549,7 @@
                     
                     <div class="flex items-center justify-between text-[11px]">
                         <span class="bg-slate-200 text-slate-700 font-semibold px-2 py-0.5 rounded-full">${p.status}</span>
-                        <span class="text-slate-400">${p.startDate ? p.startDate.slice(5) : ''} t/m ${p.endDate ? p.endDate.slice(5) : ''}</span>
+                        <span class="text-slate-400 truncate max-w-[140px]" title="${datesText}">${datesText}</span>
                     </div>
 
                     ${nextTodo ? `
@@ -585,53 +631,53 @@
                 const overlayContainer = document.createElement('div');
                 overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
 
-                const weekProjects = (window.projects || []).filter(p => {
-                    if (!p.startDate || !p.endDate) return false;
-                    const pStart = new Date(p.startDate);
-                    const pEnd = new Date(p.endDate);
-                    pStart.setHours(0,0,0,0);
-                    pEnd.setHours(23,59,59,999);
-                    return pStart <= weekEndDate && pEnd >= weekStartDate;
-                });
+                // Doorloop alle projecten én al hun losse blokken voor deze week
+                const renderedBars = [];
+                (window.projects || []).forEach(p => {
+                    if (!p.blocks || !Array.isArray(p.blocks)) return;
 
-                weekProjects.forEach(p => {
-                    const pStart = new Date(p.startDate);
-                    const pEnd = new Date(p.endDate);
-                    pStart.setHours(0,0,0,0);
-                    pEnd.setHours(23,59,59,999);
+                    p.blocks.forEach((block, bIdx) => {
+                        if (!block.startDate || !block.endDate) return;
+                        const pStart = new Date(block.startDate);
+                        const pEnd = new Date(block.endDate);
+                        pStart.setHours(0,0,0,0);
+                        pEnd.setHours(23,59,59,999);
 
-                    let startCol = 1;
-                    let endCol = 8;
+                        if (pStart <= weekEndDate && pEnd >= weekStartDate) {
+                            let startCol = 1;
+                            let endCol = 8;
 
-                    for (let d = 0; d < 7; d++) {
-                        const curDay = new Date(weekStartDate);
-                        curDay.setDate(curDay.getDate() + d);
-                        curDay.setHours(0,0,0,0);
+                            for (let d = 0; d < 7; d++) {
+                                const curDay = new Date(weekStartDate);
+                                curDay.setDate(curDay.getDate() + d);
+                                curDay.setHours(0,0,0,0);
 
-                        if (curDay < pStart) startCol = d + 2;
-                        if (curDay <= pEnd) endCol = d + 2;
-                    }
+                                if (curDay < pStart) startCol = d + 2;
+                                if (curDay <= pEnd) endCol = d + 2;
+                            }
 
-                    if (startCol < endCol) {
-                        const bar = document.createElement('div');
-                        // rounded-sm voor subtiele/minder ronde hoekjes in de agenda
-                        bar.className = 'pointer-events-auto h-6 rounded-sm text-white text-xs px-2 flex items-center justify-between shadow-sm cursor-pointer hover:brightness-110 transition truncate font-medium';
-                        
-                        const leftPercent = ((startCol - 1) / 7) * 100;
-                        const widthPercent = ((endCol - startCol) / 7) * 100;
+                            if (startCol < endCol) {
+                                const bar = document.createElement('div');
+                                bar.className = 'pointer-events-auto h-6 rounded-sm text-white text-xs px-2 flex items-center justify-between shadow-sm cursor-pointer hover:brightness-110 transition truncate font-medium';
+                                
+                                const leftPercent = ((startCol - 1) / 7) * 100;
+                                const widthPercent = ((endCol - startCol) / 7) * 100;
 
-                        bar.style.marginLeft = `${leftPercent}%`;
-                        bar.style.width = `${widthPercent}%`;
-                        bar.style.backgroundColor = p.color || '#0284c7';
+                                bar.style.marginLeft = `${leftPercent}%`;
+                                bar.style.width = `${widthPercent}%`;
+                                bar.style.backgroundColor = p.color || '#0284c7';
 
-                        bar.innerHTML = `<span class="truncate">${p.name}</span>`;
-                        bar.onclick = (e) => {
-                            e.stopPropagation();
-                            openDetailModal(p.id);
-                        };
+                                const blockLabel = p.blocks.length > 1 ? ` (Blok ${bIdx + 1})` : '';
+                                bar.innerHTML = `<span class="truncate">${p.name}${blockLabel}</span>`;
+                                bar.onclick = (e) => {
+                                    e.stopPropagation();
+                                    openDetailModal(p.id);
+                                };
 
-                        overlayContainer.appendChild(bar);
-                    }
+                                overlayContainer.appendChild(bar);
+                            }
+                        }
+                    });
                 });
 
                 weekRow.appendChild(overlayContainer);
@@ -671,18 +717,40 @@
             document.getElementById('materialsInputsContainer').innerHTML = '';
             document.getElementById('todosInputsContainer').innerHTML = '';
 
+            // Reset de 3 blok velden
+            document.getElementById('startDate1').value = '';
+            document.getElementById('endDate1').value = '';
+            document.getElementById('startDate2').value = '';
+            document.getElementById('endDate2').value = '';
+            document.getElementById('startDate3').value = '';
+            document.getElementById('endDate3').value = '';
+
             if (id) {
                 const p = window.projects.find(x => x.id === id);
                 if (!p) return;
                 document.getElementById('projectId').value = p.id;
                 document.getElementById('projectName').value = p.name;
-                document.getElementById('startDate').value = p.startDate || '';
-                document.getElementById('endDate').value = p.endDate || '';
                 document.getElementById('projectColor').value = p.color || '#0284c7';
                 document.getElementById('projectPriority').value = p.priority || 'Middel';
                 document.getElementById('projectStatus').value = p.status || 'In uitvoering';
                 document.getElementById('projectNotes').value = p.notes || '';
                 
+                // Vul de blokken in
+                if (p.blocks && p.blocks.length > 0) {
+                    if (p.blocks[0]) {
+                        document.getElementById('startDate1').value = p.blocks[0].startDate || '';
+                        document.getElementById('endDate1').value = p.blocks[0].endDate || '';
+                    }
+                    if (p.blocks[1]) {
+                        document.getElementById('startDate2').value = p.blocks[1].startDate || '';
+                        document.getElementById('endDate2').value = p.blocks[1].endDate || '';
+                    }
+                    if (p.blocks[2]) {
+                        document.getElementById('startDate3').value = p.blocks[2].startDate || '';
+                        document.getElementById('endDate3').value = p.blocks[2].endDate || '';
+                    }
+                }
+
                 if (p.materials) p.materials.forEach(m => addMaterialRow(m.name, m.bought));
                 if (p.todos) p.todos.forEach(t => addTodoRow(t.name, t.done));
 
@@ -710,12 +778,24 @@
             e.preventDefault();
             const id = document.getElementById('projectId').value;
             const name = document.getElementById('projectName').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
             const color = document.getElementById('projectColor').value;
             const priority = document.getElementById('projectPriority').value;
             const status = document.getElementById('projectStatus').value;
             const notes = document.getElementById('projectNotes').value;
+
+            // Verzamel de ingevulde blokken
+            const blocks = [];
+            const s1 = document.getElementById('startDate1').value;
+            const e1 = document.getElementById('endDate1').value;
+            if (s1 && e1) blocks.push({ startDate: s1, endDate: e1 });
+
+            const s2 = document.getElementById('startDate2').value;
+            const e2 = document.getElementById('endDate2').value;
+            if (s2 && e2) blocks.push({ startDate: s2, endDate: e2 });
+
+            const s3 = document.getElementById('startDate3').value;
+            const e3 = document.getElementById('endDate3').value;
+            if (s3 && e3) blocks.push({ startDate: s3, endDate: e3 });
 
             const materials = [];
             document.querySelectorAll('.material-row').forEach(row => {
@@ -737,7 +817,7 @@
                     const statusChanged = window.projects[index].status !== status;
                     window.projects[index] = {
                         ...window.projects[index],
-                        name, startDate, endDate, color, priority, status,
+                        name, blocks, color, priority, status,
                         statusUpdatedAt: statusChanged ? new Date().toISOString() : window.projects[index].statusUpdatedAt,
                         materials, todos, notes
                     };
@@ -745,7 +825,7 @@
             } else {
                 window.projects.push({
                     id: 'p_' + Date.now(),
-                    name, startDate, endDate, color, priority, status,
+                    name, blocks, color, priority, status,
                     statusUpdatedAt: new Date().toISOString(),
                     materials, todos, notes
                 });
@@ -775,7 +855,15 @@
 
             document.getElementById('detailHeader').style.backgroundColor = p.color || '#0284c7';
             document.getElementById('detailTitle').innerText = p.name;
-            document.getElementById('detailDates').innerText = `🗓️ ${p.startDate || ''} t/m ${p.endDate || ''}`;
+            
+            // Toon alle datumblokken in de header
+            const datesContainer = document.getElementById('detailDates');
+            if (p.blocks && p.blocks.length > 0) {
+                datesContainer.innerHTML = p.blocks.map((b, idx) => `<div>🗓️ Blok ${idx + 1}: ${b.startDate} t/m ${b.endDate}</div>`).join('');
+            } else {
+                datesContainer.innerText = '🗓️ Geen datums opgegeven';
+            }
+
             document.getElementById('detailStatus').innerText = p.status || '';
             const priorityText = p.priority || 'Middel';
             document.getElementById('detailPriority').innerText = `${priorityText === 'Hoog' ? '🔴' : priorityText === 'Middel' ? '🟡' : '🟢'} ${priorityText}`;
@@ -815,7 +903,7 @@
         window.openDetailModal = openDetailModal;
 
         function closeDetailModal() {
-            document.getElementById('detailModal').classList.add('hidden');
+            document.getElementById('detailModal'].classList.add('hidden');
         }
         window.closeDetailModal = closeDetailModal;
 
@@ -904,7 +992,7 @@
                             return `
                                 <label class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
                                     <div class="flex items-center space-x-2">
-                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}',${originalIdx})" class="rounded text-amber-500">
+                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}', ${originalIdx})" class="rounded text-amber-500">
                                         <span class="text-sm ${m.bought ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${m.name}</span>
                                     </div>
                                     <span class="text-xs ${m.bought ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}">${m.bought ? 'Gekocht' : 'Nog te kopen'}</span>
@@ -972,9 +1060,9 @@
                         ${p.todos.map((t, idx) => `
                             <label class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
                                 <div class="flex items-center space-x-2">
-                                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoStatus('${p.id}',${idx})" class="rounded text-emerald-600">
+                                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodoStatus('${p.id}', ${idx})" class="rounded text-emerald-600">
                                     <span class="text-sm ${t.done ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${t.name}</span>
-                                </div>
+                                    </div>
                                 <span class="text-xs ${t.done ? 'text-emerald-600 font-semibold' : 'text-slate-500'}">${t.done ? 'Afgerond' : 'Open'}</span>
                             </label>
                         `).join('')}
