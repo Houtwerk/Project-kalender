@@ -346,7 +346,7 @@
         </div>
     </div>
 
-    <!-- ALLE UI EN RENDERING FUNCTIES (HIER GEPLAATST ZODAT ZE ALTIJD BESCHIKBAAR ZIJN) -->
+    <!-- ALLE UI EN RENDERING FUNCTIES -->
     <script>
         let currentModalProjectId = null;
         let materialFilter = 'all';
@@ -415,13 +415,16 @@
             if (!container) return;
             container.innerHTML = '';
 
-            if (!window.projects || window.projects.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs italic">Nog geen projecten aanwezig.</div>`;
+            // Filter afgeronde projecten uit de zijbalk
+            const activeProjects = (window.projects || []).filter(p => p.status !== 'Afgerond');
+
+            if (activeProjects.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs italic">Geen actieve projecten.</div>`;
                 return;
             }
 
             const priorityWeight = { 'Hoog': 1, 'Middel': 2, 'Laag': 3 };
-            const sortedProjects = [...window.projects].sort((a, b) => {
+            const sortedProjects = [...activeProjects].sort((a, b) => {
                 const weightA = priorityWeight[a.priority] || 2;
                 const weightB = priorityWeight[b.priority] || 2;
                 return weightA - weightB;
@@ -456,7 +459,8 @@
                     ${nextTodo ? `
                         <div class="text-xs text-slate-600 bg-white p-1.5 rounded border border-slate-200 mt-1 flex items-center space-x-1 truncate">
                             <span class="text-emerald-600 font-bold">☐</span>
-                            <span class="truncate">${nextTodo}</span>${openTodos.length > 1 ? `<span class="text-[10px] text-slate-400 font-medium ml-auto">+${openTodos.length - 1}</span>` : ''}
+                            <span class="truncate">${nextTodo}</span>
+                            ${openTodos.length > 1 ? `<span class="text-[10px] text-slate-400 font-medium ml-auto">+${openTodos.length - 1}</span>` : ''}
                         </div>
                     ` : ''}
                 `;
@@ -533,7 +537,8 @@
                 overlayContainer.className = 'absolute inset-x-0 top-7 bottom-1 pointer-events-none flex flex-col gap-1.5 px-0.5 overflow-hidden';
 
                 (window.projects || []).forEach(p => {
-                    if (!p.blocks || !Array.isArray(p.blocks)) return;
+                    // Filter afgeronde projecten uit op de kalender
+                    if (!p.blocks || !Array.isArray(p.blocks) || p.status === 'Afgerond') return;
 
                     p.blocks.forEach((block, bIdx) => {
                         if (!block.startDate || !block.endDate) return;
@@ -828,7 +833,8 @@
         function renderMaterialsPreview() {
             const allMaterials = [];
             (window.projects || []).forEach(p => {
-                if (p.materials) {
+                // Toon optioneel ook alleen materialen van nog niet-afgeronde projecten
+                if (p.materials && p.status !== 'Afgerond') {
                     p.materials.forEach(m => allMaterials.push({ ...m, projectId: p.id, projectName: p.name, projectColor: p.color }));
                 }
             });
@@ -846,7 +852,7 @@
             if (!preview) return;
 
             if (allMaterials.length === 0) {
-                preview.innerHTML = `<span class="text-slate-400 italic">Geen materialen in projecten.</span>`;
+                preview.innerHTML = `<span class="text-slate-400 italic">Geen materialen in actieve projecten.</span>`;
             } else if (pending.length === 0) {
                 preview.innerHTML = `<span class="text-emerald-600 font-medium">✓ Alle materialen zijn gekocht!</span>`;
             } else {
@@ -878,7 +884,7 @@
             let hasItems = false;
 
             (window.projects || []).forEach(p => {
-                if (!p.materials || p.materials.length === 0) return;
+                if (!p.materials || p.materials.length === 0 || p.status === 'Afgerond') return;
 
                 const filtered = p.materials.filter(m => materialFilter === 'all' || !m.bought);
                 if (filtered.length === 0) return;
@@ -897,7 +903,7 @@
                             return `
                                 <label class="flex items-center justify-between bg-white p-2 rounded border border-slate-200 cursor-pointer hover:bg-slate-50">
                                     <div class="flex items-center space-x-2">
-                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}',${originalIdx})" class="rounded text-amber-500">
+                                        <input type="checkbox" ${m.bought ? 'checked' : ''} onchange="toggleMaterialStatus('${p.id}', ${originalIdx})" class="rounded text-amber-500">
                                         <span class="text-sm ${m.bought ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">${m.name}</span>
                                     </div>
                                     <span class="text-xs ${m.bought ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}">${m.bought ? 'Gekocht' : 'Nog te kopen'}</span>
@@ -910,7 +916,7 @@
             });
 
             if (!hasItems) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen materialen gevonden in deze weergave.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen materialen gevonden in actieve projecten.</div>`;
             }
         }
         window.renderShoppingList = renderShoppingList;
@@ -918,7 +924,7 @@
         function renderTodoPreview() {
             const allTodos = [];
             (window.projects || []).forEach(p => {
-                if (p.todos) {
+                if (p.todos && p.status !== 'Afgerond') {
                     p.todos.forEach(t => allTodos.push({ ...t, projectId: p.id, projectName: p.name, projectColor: p.color }));
                 }
             });
@@ -931,7 +937,7 @@
             if (!preview) return;
 
             if (allTodos.length === 0) {
-                preview.innerHTML = `<span class="text-slate-400 italic">Geen to-do's aanwezig.</span>`;
+                preview.innerHTML = `<span class="text-slate-400 italic">Geen to-do's in actieve projecten.</span>`;
             } else if (pending.length === 0) {
                 preview.innerHTML = `<span class="text-emerald-600 font-medium">✓ Alle taken zijn afgerond!</span>`;
             } else {
@@ -955,7 +961,7 @@
             let hasItems = false;
 
             (window.projects || []).forEach(p => {
-                if (!p.todos || p.todos.length === 0) return;
+                if (!p.todos || p.todos.length === 0 || p.status === 'Afgerond') return;
 
                 hasItems = true;
 
@@ -981,7 +987,7 @@
             });
 
             if (!hasItems) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen project to-do's aanwezig.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">Geen actieve project to-do's aanwezig.</div>`;
             }
         }
         window.renderTodoList = renderTodoList;
@@ -1038,7 +1044,6 @@
 
         const dbRef = ref(db);
         
-        // VEILIGE HERSTEL & LADEN LOGICA
         get(child(dbRef, 'projects')).then((snapshot) => {
             let projectsToUse = [];
 
@@ -1047,7 +1052,6 @@
                 projectsToUse = Object.values(data);
             }
 
-            // Als Firebase leeg is, check direct de browser localStorage als back-up
             if (projectsToUse.length === 0) {
                 const localData = localStorage.getItem('pwa_projects') || localStorage.getItem('projects');
                 if (localData) {
@@ -1088,7 +1092,6 @@
             console.error("Firebase leesfout:", error);
         });
 
-        // Luister live naar verdere wijzigingen
         const projectsRef = ref(db, 'projects');
         onValue(projectsRef, (snapshot) => {
             const data = snapshot.val();
